@@ -1,4 +1,5 @@
-from src.config import CATEGORY_LABELS, CATEGORY_COLORS
+import hashlib
+from src.config import CATEGORY_LABELS, CATEGORY_COLORS, SITE_PASSWORD
 
 
 def _articles_html(articles: list[dict], color: str) -> str:
@@ -20,6 +21,7 @@ def _articles_html(articles: list[dict], color: str) -> str:
 
 
 def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str:
+    pw_hash = hashlib.sha256(SITE_PASSWORD.encode()).hexdigest()
     total = sum(len(v) for v in news_by_category.values())
 
     sections = ""
@@ -44,12 +46,11 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>자동차 산업동향 브리핑</title>
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }}
 
-  /* ── 로그인 게이트 ── */
+  /* ── 비밀번호 게이트 ── */
   #gate {{
     position: fixed; inset: 0; background: #1a1a2e;
     display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -60,12 +61,19 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
   }}
   .gate-logo {{ font-size: 28px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }}
   .gate-sub {{ font-size: 13px; color: #888; margin-bottom: 32px; }}
+  .gate-label {{ font-size: 13px; color: #555; text-align: left; margin-bottom: 6px; }}
+  .gate-input {{
+    width: 100%; padding: 12px 16px; border: 1.5px solid #ddd; border-radius: 8px;
+    font-size: 15px; outline: none; transition: border-color .2s;
+  }}
+  .gate-input:focus {{ border-color: #3b82f6; }}
   .gate-btn {{
-    width: 100%; margin-top: 8px; padding: 13px; background: #1a1a2e; color: #fff;
+    width: 100%; margin-top: 16px; padding: 13px; background: #1a1a2e; color: #fff;
     border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;
     transition: background .2s;
   }}
   .gate-btn:hover {{ background: #2d2d4e; }}
+  .gate-err {{ margin-top: 12px; font-size: 13px; color: #ef4444; display: none; }}
 
   /* ── 메인 콘텐츠 ── */
   #main {{ display: none; }}
@@ -77,12 +85,6 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
   .header-title {{ font-size: 20px; font-weight: 800; }}
   .header-meta {{ font-size: 12px; color: #9ba4c4; }}
   .header-total {{ font-size: 13px; color: #fbbf24; font-weight: 700; }}
-  .logout-btn {{
-    padding: 6px 14px; background: transparent; color: #9ba4c4;
-    border: 1px solid #3a3a5c; border-radius: 6px; font-size: 12px; cursor: pointer;
-    transition: all .2s;
-  }}
-  .logout-btn:hover {{ background: #2d2d4e; color: #fff; }}
 
   nav {{
     background: #fff; border-bottom: 1px solid #e5e7eb;
@@ -118,12 +120,15 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
 </head>
 <body>
 
-<!-- 로그인 게이트 -->
+<!-- 비밀번호 게이트 -->
 <div id="gate">
   <div class="gate-card">
     <div class="gate-logo">자동차 산업동향</div>
     <div class="gate-sub">접근 권한이 있는 구성원만 이용할 수 있습니다</div>
-    <button class="gate-btn" id="login-btn">로그인하기</button>
+    <div class="gate-label">비밀번호</div>
+    <input id="pw" class="gate-input" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
+    <button class="gate-btn" onclick="checkPw()">입장하기</button>
+    <div id="err" class="gate-err">비밀번호가 올바르지 않습니다.</div>
   </div>
 </div>
 
@@ -135,10 +140,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
         <div class="header-title">자동차 산업동향 브리핑</div>
         <div class="header-meta">{report_date} 기준 · 매일 오전 7시 업데이트</div>
       </div>
-      <div style="display:flex;align-items:center;gap:16px;">
-        <div class="header-total">총 {total}건</div>
-        <button class="logout-btn" id="logout-btn">로그아웃</button>
-      </div>
+      <div class="header-total">총 {total}건</div>
     </div>
   </header>
   <nav>
@@ -150,32 +152,34 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
 </div>
 
 <script>
+const H = "{pw_hash}";
+
+async function sha256(str) {{
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}}
+
+async function checkPw() {{
+  const val = document.getElementById("pw").value;
+  const h = await sha256(val);
+  if (h === H) {{
+    sessionStorage.setItem("auth", H);
+    show();
+  }} else {{
+    document.getElementById("err").style.display = "block";
+    document.getElementById("pw").value = "";
+    document.getElementById("pw").focus();
+  }}
+}}
+
 function show() {{
   document.getElementById("gate").style.display = "none";
   document.getElementById("main").style.display = "block";
 }}
 
-netlifyIdentity.on("init", user => {{
-  if (user) show();
-}});
+document.getElementById("pw").addEventListener("keydown", e => {{ if (e.key === "Enter") checkPw(); }});
 
-netlifyIdentity.on("login", () => {{
-  netlifyIdentity.close();
-  show();
-}});
-
-netlifyIdentity.on("logout", () => {{
-  document.getElementById("main").style.display = "none";
-  document.getElementById("gate").style.display = "flex";
-}});
-
-document.getElementById("login-btn").addEventListener("click", () => {{
-  netlifyIdentity.open("login");
-}});
-
-document.getElementById("logout-btn").addEventListener("click", () => {{
-  netlifyIdentity.logout();
-}});
+if (sessionStorage.getItem("auth") === H) show();
 </script>
 </body>
 </html>"""
