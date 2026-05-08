@@ -21,7 +21,7 @@ SESSION = requests.Session()
 SESSION.verify = False
 SESSION.headers.update(HEADERS)
 
-# NHTSA 조회 대상 (주요 OEM - 한국 부품사 공급 관련 브랜드 위주)
+# NHTSA 조회 대상 (한국 부품사 공급 관련 OEM 위주)
 NHTSA_VEHICLES = [
     ("Hyundai", "Tucson"),      ("Hyundai", "Santa Fe"),    ("Hyundai", "Elantra"),
     ("Hyundai", "Sonata"),      ("Hyundai", "IONIQ 5"),
@@ -127,8 +127,168 @@ def fetch_naver_news(category: str, queries: list[str], max_days: int) -> list[d
     return [a for a in articles if a["title"] not in seen and not seen.add(a["title"])]
 
 
+def fetch_cargokr_individual_recalls(max_days: int = 60) -> list[dict]:
+    """car.go.kr 개별 리콜 공고 수집 (건별 상세정보)."""
+    articles = []
+    kst = timezone(timedelta(hours=9))
+    cutoff = datetime.now(kst) - timedelta(days=max_days)
+
+    # ── 방법 1: JSON API 시도 (여러 엔드포인트) ──────────────────────────
+    api_attempts = [
+        {
+            "url": "https://www.car.go.kr/rs/recalls/rcAll.do",
+            "data": {"pageIndex": "1", "recordCountPerPage": "30", "searchFlag": "R"},
+        },
+        {
+            "url": "https://www.car.go.kr/rs/recalls/rcList.do",
+            "data": {"pageIndex": "1", "recordCountPerPage": "30"},
+        },
+        {
+            "url": "https://www.car.go.kr/rs/recalls/getRecallList.do",
+            "data": {"pageIndex": "1", "recordCountPerPage": "30"},
+        },
+    ]
+
+    for attempt in api_attempts:
+        try:
+            resp = SESSION.post(attempt["url"], data=attempt["data"], timeout=10)
+            if resp.status_code != 200:
+                continue
+            result = resp.json()
+            items = (
+                result.get("list") or result.get("rcList") or
+                result.get("resultList") or result.get("data") or []
+            )
+            if not items:
+                continue
+
+            for item in items[:25]:
+                oem   = (item.get("mfgNm") or item.get("mfgCdNm") or
+                         item.get("manufNm") or item.get("mfrNm") or "").strip()
+                model = (item.get("carNm") or item.get("modNm") or
+                         item.get("modelNm") or item.get("carModelNm") or "").strip()
+                years = (item.get("prodPeriod") or item.get("mfgYr") or
+                         item.get("prodYr") or "").strip()
+                defect = (item.get("dfctCtn") or item.get("dfctNm") or
+                          item.get("dfctDesc") or item.get("dfctCd") or "").strip()
+                remedy = (item.get("repairMth") or item.get("repairNm") or
+                          item.get("repairDesc") or "").strip()
+                count_raw = (item.get("rcllCnt") or item.get("recallCnt") or
+                             item.get("cnt") or item.get("carCnt") or 0)
+                date_str  = (item.get("rcptDt") or item.get("insDt") or
+                             item.get("rcllDt") or item.get("regDt") or "").strip()
+                recall_no = (item.get("rcllReqNo") or item.get("rcllNo") or
+                             item.get("seqNo") or "").strip()
+
+                if not oem and not model:
+                    continue
+
+                # 날짜 파싱
+                pub_str = ""
+                for fmt in ("%Y%m%d", "%Y-%m-%d", "%Y.%m.%d"):
+                    try:
+                        d = datetime.strptime(date_str[:len(fmt.replace("%Y","0000").replace("%m","00").replace("%d","00"))], fmt)
+                        pub_dt = d.replace(tzinfo=kst)
+                        if pub_dt < cutoff:
+                            break
+                        pub_str = d.strftime("%Y-%m-%d")
+                        break
+                    except Exception:
+                        continue
+
+                try:
+                    count_int = int(str(count_raw).replace(",", ""))
+                    count_fmt = f"{count_int:,}"
+                except Exception:
+                    count_fmt = str(count_raw)
+
+                title = f"[국내 리콜] {oem} {model}"
+                if years:
+                    title += f" ({years}년형)"
+
+                summary_parts = []
+                if defect:
+                    summary_parts.append(f"결함: {defect[:120]}")
+                if count_fmt and count_fmt != "0":
+                    summary_parts.append(f"대상 {count_fmt}대")
+                if remedy:
+                    summary_parts.append(f"조치: {remedy[:60]}")
+
+                link = (
+                    f"https://www.car.go.kr/ri/recall/view.do?rcllReqNo={recall_no}"
+                    if recall_no else "https://www.car.go.kr/ri/recall/list.do"
+                )
+
+                articles.append({
+                    "title":     title,
+                    "summary":   " | ".join(summary_parts),
+                    "link":      link,
+                    "published": pub_str,
+                    "category":  "recall_kr",
+                })
+
+            if articles:
+                print(f"  [car.go.kr] JSON API 성공: {len(articles)}건")
+                return articles
+        except Exception:
+            continue
+
+    # ── 방법 2: HTML 리콜 공고 목록 스크래핑 ────────────────────────────
+    scrape_urls = [
+        "https://www.car.go.kr/ri/recall/list.do",
+        "https://www.car.go.kr/home/main.do",
+    ]
+    for url in scrape_urls:
+        try:
+            resp = SESSION.get(url, timeout=10)
+            soup = BeautifulSoup(resp.text, "lxml")
+
+            for row in soup.select("table tbody tr")[:20]:
+                cols = row.select("td")
+                if len(cols) < 3:
+                    continue
+                link_tag = None
+                for col in cols:
+                    link_tag = col.select_one("a")
+                    if link_tag:
+                        break
+                if not link_tag:
+                    continue
+
+                raw_title = link_tag.get_text(strip=True)
+                href = link_tag.get("href", "")
+                link = ("https://www.car.go.kr" + href) if href.startswith("/") else (href or "https://www.car.go.kr/ri/recall/list.do")
+                date_text = cols[-1].get_text(strip=True) if cols else ""
+
+                # 날짜 파싱
+                pub_str = ""
+                for fmt in ("%Y.%m.%d", "%Y-%m-%d", "%Y/%m/%d"):
+                    try:
+                        pub_str = datetime.strptime(date_text[:10], fmt).strftime("%Y-%m-%d")
+                        break
+                    except Exception:
+                        continue
+
+                articles.append({
+                    "title":     f"[국내 리콜] {raw_title}",
+                    "summary":   "",
+                    "link":      link,
+                    "published": pub_str or date_text,
+                    "category":  "recall_kr",
+                })
+
+            if articles:
+                print(f"  [car.go.kr] HTML 스크래핑 성공: {len(articles)}건")
+                return articles
+        except Exception as ex:
+            print(f"  [car.go.kr] 스크래핑 실패 ({url}): {ex}")
+
+    print("  [car.go.kr] 개별 리콜 수집 실패 — 통계 방식으로 전환")
+    return articles
+
+
 def fetch_cargokr_stats() -> list[dict]:
-    """car.go.kr 이달/전달 리콜 통계를 요약 카드로 반환."""
+    """car.go.kr 월별 리콜 통계 (개별 수집 실패 시 폴백)."""
     articles = []
     try:
         kst = timezone(timedelta(hours=9))
@@ -145,9 +305,8 @@ def fetch_cargokr_stats() -> list[dict]:
         if not tables:
             return articles
 
-        # 구조: <tr><th>04월</th><td>건수</td><td>대수</td>...<td>합계</td></tr>
         month_label = f"{month:02d}월"
-        prev_label = f"{(month - 1):02d}월" if month > 1 else "12월"
+        prev_label  = f"{(month - 1):02d}월" if month > 1 else "12월"
 
         for row in tables[0].select("tr"):
             th_cells = [th.get_text(strip=True) for th in row.select("th")]
@@ -177,7 +336,7 @@ def fetch_cargokr_stats() -> list[dict]:
 
 
 def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list[dict]:
-    """단일 차종 NHTSA 리콜 조회 (스레드별 독립 세션)."""
+    """단일 차종 NHTSA 리콜 조회."""
     articles = []
     try:
         session = requests.Session()
@@ -197,14 +356,15 @@ def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list
             pub = _parse_nhtsa_date(r.get("ReportReceivedDate", ""))
             if pub is None or pub < cutoff:
                 continue
-            campaign = r.get("NHTSACampaignNumber", "")
+            campaign  = r.get("NHTSACampaignNumber", "")
             component = r.get("Component", "")
-            summary = _clean(r.get("Summary", ""), 250)
+            summary   = _clean(r.get("Summary", ""), 250)
             consequence = _clean(r.get("Consequence", ""), 150)
             articles.append({
                 "title":     f"[NHTSA] {make} {model} {year} — {component}",
                 "summary":   f"{summary} {consequence}".strip(),
-                "link":      f"https://www.nhtsa.gov/vehicle-safety/recalls#{campaign}",
+                # ✅ 수정: #fragment 방식 → ?nhtsaId= 쿼리 파라미터 방식
+                "link":      f"https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId={campaign}",
                 "published": pub.strftime("%Y-%m-%d"),
                 "category":  "recall_us",
             })
@@ -235,7 +395,9 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
 
 
 def collect_all_news() -> dict[str, list[dict]]:
-    result: dict[str, list[dict]] = {cat: [] for cat in ["recall_kr", "recall_us", "recall_global", "news", "regulation"]}
+    result: dict[str, list[dict]] = {
+        cat: [] for cat in ["recall_kr", "recall_us", "recall_global", "news", "regulation"]
+    }
     max_days = NEWS_MAX_AGE_DAYS
 
     print("뉴스 수집 시작...")
@@ -244,7 +406,7 @@ def collect_all_news() -> dict[str, list[dict]]:
     print("  [오토헤럴드] RSS 수집 중...")
     ah_articles = fetch_rss("recall_kr", "https://www.autoherald.co.kr/rss/allArticle.xml", max_days)
     recall_kw = ["리콜", "결함", "시정조치"]
-    reg_kw = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
+    reg_kw    = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
     for a in ah_articles:
         t = a["title"]
         if any(k in t for k in recall_kw):
@@ -266,14 +428,24 @@ def collect_all_news() -> dict[str, list[dict]]:
                 existing.add(a["title"])
         print(f"  [네이버/{category}] {len(naver_articles)}건")
 
-    # 3. car.go.kr 이달 리콜 통계
-    print("  [car.go.kr] 리콜 통계 수집 중...")
-    cargokr = fetch_cargokr_stats()
-    existing = {a["title"] for a in result["recall_kr"]}
-    for a in cargokr:
-        if a["title"] not in existing:
-            result["recall_kr"].append(a)
-    print(f"  [car.go.kr] {len(cargokr)}건")
+    # 3. car.go.kr 개별 리콜 공고 (건별)
+    print("  [car.go.kr] 개별 리콜 공고 수집 중...")
+    cargokr_individual = fetch_cargokr_individual_recalls(max_days=60)
+    if cargokr_individual:
+        existing = {a["title"] for a in result["recall_kr"]}
+        for a in cargokr_individual:
+            if a["title"] not in existing:
+                result["recall_kr"].append(a)
+        print(f"  [car.go.kr] 개별 리콜 {len(cargokr_individual)}건")
+    else:
+        # 폴백: 월별 통계 카드
+        print("  [car.go.kr] 월별 통계로 전환...")
+        cargokr_stats = fetch_cargokr_stats()
+        existing = {a["title"] for a in result["recall_kr"]}
+        for a in cargokr_stats:
+            if a["title"] not in existing:
+                result["recall_kr"].append(a)
+        print(f"  [car.go.kr] 통계 {len(cargokr_stats)}건")
 
     # 4. NHTSA 미국 리콜
     print("  [NHTSA] 주요 차종 리콜 수집 중 (병렬)...")

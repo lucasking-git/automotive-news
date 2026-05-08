@@ -11,7 +11,13 @@ _STAT_RE = re.compile(
     r'합계 ([\d,]+)건/([\d,]+)대'
 )
 
-# ── CSS (plain string, no f-string — no brace escaping needed) ──────────────
+# 국기는 flagcdn.com img 태그 사용 (Linux 서버에서 국기 이모지 미지원 문제 해결)
+_FLAG_IMG = {
+    "recall_kr": '<img src="https://flagcdn.com/20x15/kr.png" alt="KR" class="flag-img">',
+    "recall_us": '<img src="https://flagcdn.com/20x15/us.png" alt="US" class="flag-img">',
+}
+
+# ── CSS ──────────────────────────────────────────────────────────────────────
 _CSS = """
 :root{
   --brand:#00ADE9;--brand-dk:#0066B2;--brand-dkk:#003B6F;
@@ -51,14 +57,11 @@ body{font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;backgrou
 
 /* Header */
 header{background:linear-gradient(135deg,#003B6F 0%,#0066B2 100%);color:#fff;padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,50,120,.4)}
-.header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.header-left{display:flex;align-items:center;gap:14px}
+.header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:14px}
 .header-icon{width:46px;height:46px;flex-shrink:0;background:linear-gradient(135deg,#00ADE9,#0055A4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,173,233,.45)}
 .header-title{font-size:18px;font-weight:800;letter-spacing:-.4px}
 .header-org{font-size:12px;color:#00ADE9;font-weight:700;letter-spacing:.4px;margin-top:2px}
 .header-meta{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
-.stat-chip{display:flex;align-items:center;gap:6px;background:rgba(0,173,233,.12);border:1px solid rgba(0,173,233,.25);border-radius:20px;padding:7px 14px;font-size:12.5px;color:rgba(255,255,255,.7)}
-.stat-chip strong{color:#00ADE9;font-weight:700}
 
 /* Nav */
 nav{background:var(--surface);border-bottom:2.5px solid #00ADE9;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
@@ -68,6 +71,7 @@ nav::-webkit-scrollbar{display:none}
 .nav-link:hover{color:var(--c);border-bottom-color:var(--c)}
 .nav-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8f4fd;color:var(--text-3);transition:background .15s,color .15s}
 .nav-link:hover .nav-count{background:rgba(0,173,233,.12);color:var(--c)}
+.flag-img{width:20px;height:15px;border-radius:2px;vertical-align:middle;object-fit:cover}
 
 /* Main content */
 main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
@@ -78,10 +82,15 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .section-header{display:flex;align-items:center;gap:12px;padding:17px 22px 15px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s}
 .section-header:hover{background:#f7fbff}
 .section-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(0,173,233,.07)}
+.section-icon .flag-img{width:28px;height:21px;border-radius:3px}
 .section-title{font-size:15px;font-weight:700;flex:1}
 .section-badge{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;color:#fff}
 .sec-toggle{font-size:13px;color:var(--text-3);margin-left:4px;transition:transform .25s}
-.sec-toggle.open{transform:rotate(0deg)}
+
+/* Date separator */
+.date-sep{display:flex;align-items:center;gap:10px;padding:10px 22px 4px}
+.date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.date-sep span{font-size:11px;font-weight:700;color:var(--text-3);background:#f0f8fd;border:1px solid var(--border);border-radius:20px;padding:2px 12px;white-space:nowrap}
 
 /* Cards */
 .cards-list{padding:4px 0}
@@ -98,7 +107,7 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .more-btn{font-size:12px;font-weight:600;padding:3px 0;margin-top:5px;background:none;border:none;cursor:pointer;display:inline-block;opacity:.6;transition:opacity .15s}
 .more-btn:hover{opacity:1}
 
-/* car.go.kr Recall Stat Card */
+/* car.go.kr 통계 카드 (폴백용) */
 .recall-stat-card{padding:16px 22px;border-bottom:1px solid #f0f8fd}
 .recall-stat-title{font-size:14px;font-weight:700;margin-bottom:10px}
 .recall-stat-grid{display:flex;gap:10px;flex-wrap:wrap}
@@ -130,7 +139,7 @@ footer{background:#003B6F;border-top:2px solid rgba(0,173,233,.25);text-align:ce
 footer strong{color:rgba(255,255,255,.75)}
 """
 
-# ── JS (plain string) ────────────────────────────────────────────────────────
+# ── JS ───────────────────────────────────────────────────────────────────────
 _JS_TEMPLATE = """
 const H = "{pw_hash}";
 
@@ -178,7 +187,7 @@ function toggleExtra(id, total) {{
   const isOpen = extra.classList.toggle("open");
   bar.innerHTML = isOpen
     ? "▴ &nbsp;접기"
-    : '▾ &nbsp;나머지 <strong>' + total + '</strong>건 더 보기';
+    : "▾ &nbsp;나머지 <strong>" + total + "</strong>건 더 보기";
 }}
 
 function toggleMore(btn) {{
@@ -224,9 +233,30 @@ def _get_source(article: dict) -> str:
         return "모터그래프"
     if "autodaily.co.kr" in link:
         return "오토데일리"
-    if "carisyou.com" in link:
-        return "카이즈유"
     return ""
+
+
+def _extract_date(pub: str) -> str:
+    """published 문자열에서 날짜 부분(YYYY-MM-DD)만 추출."""
+    if not pub:
+        return "날짜 미상"
+    # YYYY-MM-DD HH:MM
+    m = re.match(r'(\d{4}-\d{2}-\d{2})', pub)
+    if m:
+        return m.group(1)
+    # YYYY.MM.DD
+    m = re.match(r'(\d{4})\.(\d{2})\.(\d{2})', pub)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    # YYYYMMDD
+    m = re.match(r'(\d{4})(\d{2})(\d{2})', pub)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    # YYYY-MM (월별 통계)
+    m = re.match(r'(\d{4}-\d{2})$', pub)
+    if m:
+        return m.group(1)
+    return pub[:10] if len(pub) >= 10 else pub
 
 
 def _is_cargokr_stat(article: dict) -> bool:
@@ -286,17 +316,63 @@ def _card_html(article: dict, color: str) -> str:
     )
 
 
-def _section_html(cat: str, label: str, color: str, icon: str, articles: list[dict]) -> str:
+def _section_html(cat: str, label: str, color: str, icon_html: str, articles: list[dict]) -> str:
     count = len(articles)
-    all_cards = [_card_html(a, color) for a in articles[:30]]
 
-    visible_html = "".join(all_cards[:VISIBLE_COUNT])
-    extra_html   = "".join(all_cards[VISIBLE_COUNT:])
+    # 날짜 내림차순 정렬
+    sorted_articles = sorted(
+        articles[:30],
+        key=lambda a: _extract_date(a.get("published") or ""),
+        reverse=True,
+    )
+
+    # 날짜 구분선 포함 flat 아이템 리스트 구성
+    items: list[tuple[str, object]] = []  # ("header", date_str) | ("card", article)
+    last_date = None
+    for a in sorted_articles:
+        date = _extract_date(a.get("published") or "")
+        if date != last_date:
+            items.append(("header", date))
+            last_date = date
+        items.append(("card", a))
+
+    # VISIBLE_COUNT 카드 기준으로 visible / extra 분리
+    card_count = 0
+    split_idx  = len(items)
+    for i, (typ, _) in enumerate(items):
+        if typ == "card":
+            card_count += 1
+            if card_count == VISIBLE_COUNT:
+                split_idx = i + 1
+                break
+
+    visible_items = items[:split_idx]
+    extra_items   = items[split_idx:]
+
+    # extra 첫 항목이 visible 마지막 날짜와 동일한 header면 중복 제거
+    if extra_items and extra_items[0][0] == "header":
+        last_visible_date = next(
+            (c for t, c in reversed(visible_items) if t == "header"), None
+        )
+        if extra_items[0][1] == last_visible_date:
+            extra_items = extra_items[1:]
+
+    def render(item_list: list) -> str:
+        html = ""
+        for typ, content in item_list:
+            if typ == "header":
+                html += f'<div class="date-sep"><span>{content}</span></div>'
+            else:
+                html += _card_html(content, color)
+        return html
+
+    visible_html = render(visible_items)
+    extra_html   = render(extra_items)
 
     extra_block  = ""
     expand_block = ""
     if extra_html:
-        remaining = count - VISIBLE_COUNT
+        remaining   = sum(1 for t, _ in extra_items if t == "card")
         extra_block = f'<div class="cards-extra" id="extra-{cat}">{extra_html}</div>'
         expand_block = (
             f'<button class="expand-bar" id="expbar-{cat}" '
@@ -312,16 +388,12 @@ def _section_html(cat: str, label: str, color: str, icon: str, articles: list[di
             '</div>'
         )
     else:
-        body = (
-            f'<div class="cards-list">{visible_html}</div>'
-            f'{extra_block}'
-            f'{expand_block}'
-        )
+        body = f'<div class="cards-list">{visible_html}</div>{extra_block}{expand_block}'
 
     return (
         f'<section class="section" id="sec-{cat}" style="--sec-c:{color}">'
         f'<div class="section-header" onclick="toggleSec(\'{cat}\')">'
-        f'<div class="section-icon">{icon}</div>'
+        f'<div class="section-icon">{icon_html}</div>'
         f'<div class="section-title" style="color:{color}">{label}</div>'
         f'<span class="section-badge" style="background:{color}">{count}건</span>'
         f'<span class="sec-toggle open" id="tgl-{cat}">▼</span>'
@@ -335,21 +407,25 @@ def _section_html(cat: str, label: str, color: str, icon: str, articles: list[di
 
 def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str:
     pw_hash = hashlib.sha256(SITE_PASSWORD.encode()).hexdigest()
-    total   = sum(len(v) for v in news_by_category.values())
 
     nav_items = ""
     sections  = ""
-    for cat, label in CATEGORY_LABELS.items():
-        articles = news_by_category.get(cat, [])
-        color    = CATEGORY_COLORS.get(cat, "#00ADE9")
-        icon     = CATEGORY_ICONS.get(cat, "📋")
-        count    = len(articles)
 
+    for cat, label in CATEGORY_LABELS.items():
+        articles  = news_by_category.get(cat, [])
+        color     = CATEGORY_COLORS.get(cat, "#00ADE9")
+        emoji     = CATEGORY_ICONS.get(cat, "📋")
+        # 국기 카테고리는 img 태그, 나머지는 이모지
+        icon_html = _FLAG_IMG.get(cat, emoji)
+        count     = len(articles)
+
+        # nav용 아이콘 (인라인이므로 img 태그 그대로 사용)
+        nav_icon = _FLAG_IMG.get(cat, emoji)
         nav_items += (
             f'<a href="#sec-{cat}" class="nav-link" style="--c:{color}">'
-            f'{icon} {label} <span class="nav-count">{count}</span></a>'
+            f'{nav_icon} {label} <span class="nav-count">{count}</span></a>'
         )
-        sections += _section_html(cat, label, color, icon, articles)
+        sections += _section_html(cat, label, color, icon_html, articles)
 
     js = _JS_TEMPLATE.format(pw_hash=pw_hash)
 
@@ -383,15 +459,12 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
 <div id="main">
   <header>
     <div class="header-inner">
-      <div class="header-left">
-        <div class="header-icon">📋</div>
-        <div>
-          <div class="header-title">자동차 산업동향 브리핑</div>
-          <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
-          <div class="header-meta">{report_date} 기준 &nbsp;·&nbsp; 매일 오전 7시 자동 업데이트</div>
-        </div>
+      <div class="header-icon">📋</div>
+      <div>
+        <div class="header-title">자동차 산업동향 브리핑</div>
+        <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
+        <div class="header-meta">{report_date} 기준 &nbsp;·&nbsp; 매일 오전 7시 자동 업데이트</div>
       </div>
-      <div class="stat-chip">총 <strong>{total}</strong>건 수집</div>
     </div>
   </header>
 

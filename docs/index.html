@@ -56,7 +56,13 @@ body{font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;backgrou
 
 /* Header */
 header{background:linear-gradient(135deg,var(--brand-dkk) 0%,var(--brand-dk) 100%);color:#fff;padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,50,120,.4)}
-.header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:14px}
+/* Date separator */
+.date-sep{display:flex;align-items:center;gap:10px;padding:10px 22px 4px}
+.date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.date-sep span{font-size:11px;font-weight:700;color:var(--text-3);background:#f0f8fd;border:1px solid var(--border);border-radius:20px;padding:2px 12px;white-space:nowrap}
+.flag-img{width:20px;height:15px;border-radius:2px;vertical-align:middle;object-fit:cover}
+.section-icon .flag-img{width:28px;height:21px;border-radius:3px}
 .header-left{display:flex;align-items:center;gap:14px}
 .header-icon{width:46px;height:46px;flex-shrink:0;background:linear-gradient(135deg,#00ADE9,#0055A4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,173,233,.45)}
 .header-title{font-size:18px;font-weight:800;letter-spacing:-.4px}
@@ -167,17 +173,13 @@ footer .ft-div{margin:0 8px;opacity:.3}
           <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
           <div class="header-meta">2026년 05월 06일 기준 &nbsp;·&nbsp; 매일 오전 7시 자동 업데이트</div>
         </div>
-      </div>
-      <div class="header-right">
-        <div class="stat-chip">총 <strong>61</strong>건 수집</div>
-      </div>
     </div>
   </header>
 
   <nav>
     <div class="nav-inner">
-      <a href="#sec-recall_kr"     class="nav-link" style="--c:var(--c-kr)"  >🇰🇷 국내 리콜·결함        <span class="nav-count">3</span></a>
-      <a href="#sec-recall_us"     class="nav-link" style="--c:var(--c-us)"  >🇺🇸 미국 리콜             <span class="nav-count">45</span></a>
+      <a href="#sec-recall_kr"     class="nav-link" style="--c:var(--c-kr)"  ><img src="https://flagcdn.com/20x15/kr.png" alt="KR" class="flag-img"> 국내 리콜·결함        <span class="nav-count">3</span></a>
+      <a href="#sec-recall_us"     class="nav-link" style="--c:var(--c-us)"  ><img src="https://flagcdn.com/20x15/us.png" alt="US" class="flag-img"> 미국 리콜             <span class="nav-count">45</span></a>
       <a href="#sec-recall_global" class="nav-link" style="--c:var(--c-gl)"  >🌍 글로벌 리콜            <span class="nav-count">0</span></a>
       <a href="#sec-news"          class="nav-link" style="--c:var(--c-news)">📰 자동차 산업 동향 뉴스  <span class="nav-count">13</span></a>
       <a href="#sec-regulation"    class="nav-link" style="--c:var(--c-reg)" >⚖️ 법규·규제              <span class="nav-count">0</span></a>
@@ -189,7 +191,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
     <!-- ════ 국내 리콜·결함 ════ -->
     <section class="section" id="sec-recall_kr" style="--sec-c:var(--c-kr)">
       <div class="section-header" onclick="toggleSec('recall_kr')">
-        <div class="section-icon">🇰🇷</div>
+        <div class="section-icon"><img src="https://flagcdn.com/20x15/kr.png" alt="KR" class="flag-img"></div>
         <div class="section-title" style="color:var(--c-kr)">국내 리콜·결함</div>
         <span class="section-badge" style="background:var(--c-kr)">3건</span>
         <span class="sec-toggle open" id="tgl-recall_kr">▼</span>
@@ -197,6 +199,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
       <div id="body-recall_kr">
 
         <div class="cards-list">
+          <div class="date-sep"><span>2026-05-04</span></div>
           <div class="card">
             <div class="card-meta">
               <span class="card-date">2026-05-04 15:47</span>
@@ -208,6 +211,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
           </div>
         </div>
 
+        <div class="date-sep"><span>2026-05 (월별현황)</span></div>
         <!-- car.go.kr 2026년 05월 -->
         <div class="recall-stat-card">
           <div class="card-meta">
@@ -235,6 +239,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
           <a href="https://www.car.go.kr/ri/stat/list.do" class="recall-detail-link" target="_blank" rel="noopener noreferrer">→ 개별 리콜 건 상세보기 (car.go.kr)</a>
         </div>
 
+        <div class="date-sep"><span>2026-04 (월별현황)</span></div>
         <!-- car.go.kr 2026년 04월 -->
         <div class="recall-stat-card">
           <div class="card-meta">
@@ -268,7 +273,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
     <!-- ════ 미국 리콜 ════ -->
     <section class="section" id="sec-recall_us" style="--sec-c:var(--c-us)">
       <div class="section-header" onclick="toggleSec('recall_us')">
-        <div class="section-icon">🇺🇸</div>
+        <div class="section-icon"><img src="https://flagcdn.com/20x15/us.png" alt="US" class="flag-img"></div>
         <div class="section-title" style="color:var(--c-us)">미국 리콜</div>
         <span class="section-badge" style="background:var(--c-us)">45건</span>
         <span class="sec-toggle open" id="tgl-recall_us">▼</span>
@@ -276,30 +281,33 @@ footer .ft-div{margin:0 8px;opacity:.3}
       <div id="body-recall_us">
         <div class="cards-list">
 
+          <div class="date-sep"><span>2026-04-22</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-22</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V256000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Toyota RAV4 2025 — SEATS:CRITICAL FASTENERS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V256000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Toyota RAV4 2025 — SEATS:CRITICAL FASTENERS</a>
             <p class="card-summary">Toyota Motor Engineering & Manufacturing (Toyota) is recalling certain 2025 RAV 4 vehicles. The front seat brackets for the seat rails may be welded improperly. Improperly welded seat brackets can prevent the seat from adequately restraining an occupant during a crash, increasing the risk of injury.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
+          <div class="date-sep"><span>2026-04-21</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-21</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Elantra 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Elantra 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
             <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-21</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Tucson 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Tucson 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
             <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
+          <div class="date-sep"><span>2026-04-10</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
@@ -311,77 +319,78 @@ footer .ft-div{margin:0 8px;opacity:.3}
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2026 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2026 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
             <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
+          <div class="date-sep"><span>2026-04-06</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2025 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2025 — SEAT BELTS:FRONT:ANCHORAGE</a>
             <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2026 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2026 — SEAT BELTS:FRONT:ANCHORAGE</a>
             <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
-            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2024 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId=26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2024 — SEAT BELTS:FRONT:ANCHORAGE</a>
             <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
             <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
@@ -421,6 +430,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
       <div id="body-news">
         <div class="cards-list">
 
+          <div class="date-sep"><span>2026-05-06</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-05-06 05:45</span><span class="card-source">오토헤럴드</span></div>
             <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60351" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">BMW, 전기차 누적 생산 200만대 돌파... 2013년 i3 이후 13년만</a>
@@ -428,6 +438,7 @@ footer .ft-div{margin:0 8px;opacity:.3}
             <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
           </div>
 
+          <div class="date-sep"><span>2026-05-04</span></div>
           <div class="card">
             <div class="card-meta"><span class="card-date">2026-05-04 16:14</span><span class="card-source">오토헤럴드</span></div>
             <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60336" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">완성차 4월 실적 전년비 3.4% 감소... 기아 내수 28년만 현대차 추월</a>
