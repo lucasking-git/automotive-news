@@ -1,5 +1,6 @@
 import re
 import hashlib
+from datetime import datetime, timezone, timedelta
 from src.config import CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS, SITE_PASSWORD
 
 DATE_VISIBLE = 5  # 날짜 그룹별 기본 표시 건수 (초과분은 접기)
@@ -35,16 +36,20 @@ body{font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;backgrou
 /* Gate */
 #gate{position:fixed;inset:0;background:linear-gradient(145deg,#001a33 0%,#003B6F 45%,#00264d 100%);display:flex;align-items:center;justify-content:center;z-index:999}
 #gate::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(0,173,233,.18) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 40%,transparent 100%);pointer-events:none}
-.gate-card{position:relative;z-index:1;background:rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,173,233,.2);border-radius:20px;padding:48px 40px;width:400px;text-align:center;animation:cardUp .5s cubic-bezier(.34,1.56,.64,1) both}
+.gate-card{position:relative;z-index:1;background:rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,173,233,.2);border-radius:20px;padding:48px 40px;max-width:400px;width:90%;text-align:center;animation:cardUp .5s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes cardUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .gate-emblem{width:72px;height:72px;background:linear-gradient(135deg,#00ADE9 0%,#0055A4 100%);border-radius:18px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 28px rgba(0,173,233,.5)}
 .gate-logo{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:4px}
 .gate-brand{font-size:11.5px;color:#00ADE9;font-weight:700;letter-spacing:1.2px;margin-bottom:8px}
 .gate-sub{font-size:12.5px;color:rgba(255,255,255,.45);margin-bottom:36px;line-height:1.65}
 .gate-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);text-align:left;margin-bottom:8px}
-.gate-input{width:100%;padding:13px 16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(0,173,233,.22);border-radius:var(--r-sm);font-size:15px;color:#fff;outline:none;letter-spacing:2px;transition:border-color .2s,background .2s}
+/* [개선] 비밀번호 wrap & 토글 버튼 */
+.pw-wrap{position:relative}
+.gate-input{width:100%;padding:13px 48px 13px 16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(0,173,233,.22);border-radius:var(--r-sm);font-size:15px;color:#fff;outline:none;letter-spacing:2px;transition:border-color .2s,background .2s}
 .gate-input::placeholder{color:rgba(255,255,255,.28);letter-spacing:normal}
 .gate-input:focus{border-color:#00ADE9;background:rgba(0,173,233,.1)}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:18px;padding:4px;line-height:1;transition:color .15s}
+.pw-toggle:hover{color:rgba(255,255,255,.9)}
 .gate-btn{width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#00ADE9,#0055A4);color:#fff;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,173,233,.4);transition:transform .15s,box-shadow .15s}
 .gate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,173,233,.55)}
 .gate-btn:active{transform:translateY(0)}
@@ -62,30 +67,41 @@ header{background:linear-gradient(135deg,#003B6F 0%,#0066B2 100%);color:#fff;pad
 .header-title{font-size:18px;font-weight:800;letter-spacing:-.4px}
 .header-org{font-size:12px;color:#00ADE9;font-weight:700;letter-spacing:.4px;margin-top:2px}
 .header-meta{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+/* [개선] 수집 시각 강조 */
+.collect-time{color:rgba(0,173,233,.9);font-weight:700}
 
 /* Nav */
 nav{background:var(--surface);border-bottom:2.5px solid #00ADE9;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 .nav-inner{max-width:1000px;margin:0 auto;display:flex;padding:0 16px}
-.nav-link{display:inline-flex;align-items:center;gap:6px;padding:13px 15px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
+.nav-link{display:inline-flex;align-items:center;gap:6px;padding:13px 15px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s,opacity .2s;white-space:nowrap}
 .nav-link:hover{color:var(--c);border-bottom-color:var(--c)}
+/* [개선] 스크롤 연동 Active 표시 */
+.nav-link.active{color:var(--c);border-bottom-color:var(--c)}
+.nav-link.active .nav-count,.nav-link:hover .nav-count{background:rgba(0,173,233,.12);color:var(--c)}
+/* [개선] 0건 섹션 흐리게 */
+.nav-link.nav-empty{opacity:0.38}
 .nav-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8f4fd;color:var(--text-3);transition:background .15s,color .15s}
-.nav-link:hover .nav-count{background:rgba(0,173,233,.12);color:var(--c)}
 .flag-img{width:20px;height:15px;border-radius:2px;vertical-align:middle;object-fit:cover}
 
 /* Main content */
 main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 
 /* Section */
-.section{background:var(--surface);border-radius:var(--r);margin-bottom:24px;box-shadow:var(--sh);overflow:hidden;transition:box-shadow .2s;border-left:4px solid var(--sec-c,#00ADE9)}
+.section{background:var(--surface);border-radius:var(--r);margin-bottom:24px;box-shadow:var(--sh);overflow:hidden;transition:box-shadow .2s,opacity .2s;border-left:4px solid var(--sec-c,#00ADE9)}
 .section:hover{box-shadow:var(--sh-lg)}
+/* [개선] 0건 섹션 반투명 */
+.section.section-empty{opacity:0.55}
 .section-header{display:flex;align-items:center;gap:12px;padding:17px 22px 15px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s}
-.section-header:hover{background:#f7fbff}
+/* [개선] 키보드 포커스 스타일 */
+.section-header:hover,.section-header:focus-visible{background:#f7fbff;outline:none}
 .section-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(0,173,233,.07)}
 .section-icon .flag-img{width:28px;height:21px;border-radius:3px}
 .section-title{font-size:15px;font-weight:700;flex:1}
 .section-badge{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;color:#fff}
-.sec-toggle{font-size:13px;color:var(--text-3);margin-left:4px;transition:transform .25s}
+/* [개선] Chevron 애니메이션 (열림=90deg, 닫힘=0deg) */
+.sec-toggle{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:18px;color:var(--text-3);margin-left:4px;transition:transform .25s;transform:rotate(90deg)}
+.sec-toggle.closed{transform:rotate(0deg)}
 
 /* Date separator */
 .date-sep{display:flex;align-items:center;gap:10px;padding:10px 22px 4px}
@@ -94,7 +110,8 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 
 /* Cards */
 .cards-list{padding:4px 0}
-.card{padding:15px 22px;border-bottom:1px solid #f0f8fd;transition:background .15s}
+/* [개선] 카드 여백·구분선 */
+.card{padding:18px 22px;border-bottom:1px solid #e8f0fb;transition:background .15s}
 .card:last-child{border-bottom:none}
 .card:hover{background:#f5faff}
 .card-meta{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap}
@@ -103,6 +120,8 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .card-source-official{font-size:11px;font-weight:700;color:#0d7c66;background:#e8f5f0;border:1px solid #b2dfdb;border-radius:4px;padding:2px 8px}
 .card-title{font-size:14px;font-weight:600;line-height:1.55;text-decoration:none;display:block;transition:opacity .15s}
 .card-title:hover{text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+/* [개선] 외부 링크 아이콘 */
+.card-title::after{content:'↗';font-size:10px;opacity:.3;margin-left:4px;vertical-align:top;font-weight:400}
 .card-summary{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-summary.expanded{display:block;-webkit-line-clamp:unset}
 .more-btn{font-size:12px;font-weight:600;padding:3px 0;margin-top:5px;background:none;border:none;cursor:pointer;display:inline-block;opacity:.6;transition:opacity .15s}
@@ -126,6 +145,8 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .expand-bar:hover{background:#f0f8fd}
 .date-expand-bar{width:fit-content;margin:8px auto 12px;padding:7px 26px;font-size:12.5px;font-weight:700;background:#f0f8fd;border:1.5px solid currentColor;border-radius:20px;border-top:1.5px solid currentColor;transition:background .15s,box-shadow .15s}
 .date-expand-bar:hover{background:#dbeafe;box-shadow:0 2px 10px rgba(0,102,178,.15)}
+/* [개선] 더보기 날짜 뱃지 */
+.expbar-date{font-size:11px;opacity:.65;background:#dbeafe;border-radius:10px;padding:1px 8px;margin-right:3px}
 
 /* Empty */
 .empty-state{padding:44px 24px;text-align:center}
@@ -140,6 +161,14 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 /* Footer */
 footer{background:#003B6F;border-top:2px solid rgba(0,173,233,.25);text-align:center;font-size:12px;color:rgba(255,255,255,.4);padding:22px 16px}
 footer strong{color:rgba(255,255,255,.75)}
+
+/* [개선] 모바일 반응형 */
+@media(max-width:480px){
+  .gate-card{padding:36px 24px}
+  .header-inner{gap:10px}
+  .header-icon{width:38px;height:38px;font-size:18px}
+  main{padding:0 12px 72px}
+}
 """
 
 # ── JS ───────────────────────────────────────────────────────────────────────
@@ -167,30 +196,42 @@ async function checkPw() {{
   }}
 }}
 
+/* [개선] 비밀번호 표시/숨기기 토글 */
+function togglePw() {{
+  const inp = document.getElementById("pw");
+  const btn = document.querySelector(".pw-toggle");
+  inp.type = inp.type === "password" ? "text" : "password";
+  btn.textContent = inp.type === "password" ? "👁" : "🙈";
+}}
+
 function show() {{
   document.getElementById("gate").style.display = "none";
   document.getElementById("main").style.display = "block";
+  initMain();
 }}
 
 document.getElementById("pw").addEventListener("keydown", e => {{ if (e.key === "Enter") checkPw(); }});
 if (sessionStorage.getItem("auth") === H) show();
 
+/* [개선] Chevron + aria-expanded 연동 */
 function toggleSec(id) {{
   const body = document.getElementById("body-" + id);
   const tgl  = document.getElementById("tgl-" + id);
-  const isOpen = tgl.classList.contains("open");
+  const hdr  = tgl.closest(".section-header");
+  const isOpen = !tgl.classList.contains("closed");
   body.style.display = isOpen ? "none" : "";
-  tgl.classList.toggle("open", !isOpen);
-  tgl.textContent = isOpen ? "▶" : "▼";
+  tgl.classList.toggle("closed", isOpen);
+  if (hdr) hdr.setAttribute("aria-expanded", String(!isOpen));
 }}
 
-function toggleExtra(id, total) {{
+/* [개선] 더보기 버튼에 날짜 컨텍스트 표시 */
+function toggleExtra(id, total, date) {{
   const extra = document.getElementById("extra-" + id);
   const bar   = document.getElementById("expbar-" + id);
   const isOpen = extra.classList.toggle("open");
   bar.innerHTML = isOpen
     ? "▴ &nbsp;접기"
-    : "▾ &nbsp;나머지 <strong>" + total + "</strong>건 더 보기";
+    : '▾ &nbsp;<span class="expbar-date">' + date + '</span>&nbsp;나머지 <strong>' + total + '</strong>건 더 보기';
 }}
 
 function toggleMore(btn) {{
@@ -199,13 +240,39 @@ function toggleMore(btn) {{
   btn.textContent = expanded ? "접기 ▴" : "더보기 ▾";
 }}
 
-document.querySelectorAll(".card-summary").forEach(el => {{
-  const lineH = parseInt(getComputedStyle(el).lineHeight);
-  if (el.scrollHeight <= lineH * 2 + 4) {{
-    const btn = el.nextElementSibling;
-    if (btn && btn.classList.contains("more-btn")) btn.style.display = "none";
+/* [개선] 메인 진입 후 초기화 (키보드 접근성 + Nav Active + 더보기 자동 숨김) */
+function initMain() {{
+  // 2줄 이하 요약은 더보기 버튼 숨김
+  document.querySelectorAll(".card-summary").forEach(el => {{
+    const lineH = parseInt(getComputedStyle(el).lineHeight);
+    if (el.scrollHeight <= lineH * 2 + 4) {{
+      const btn = el.nextElementSibling;
+      if (btn && btn.classList.contains("more-btn")) btn.style.display = "none";
+    }}
+  }});
+
+  // 섹션 헤더 키보드 접근성 (Enter/Space)
+  document.querySelectorAll(".section-header").forEach(hdr => {{
+    hdr.addEventListener("keydown", e => {{
+      if (e.key === "Enter" || e.key === " ") {{ e.preventDefault(); hdr.click(); }}
+    }});
+  }});
+
+  // Nav 스크롤 Active 하이라이트
+  const allSecs  = document.querySelectorAll(".section");
+  const navLinks = document.querySelectorAll(".nav-link");
+  function updateNav() {{
+    let cur = "";
+    allSecs.forEach(sec => {{
+      if (sec.getBoundingClientRect().top <= 130) cur = sec.id;
+    }});
+    navLinks.forEach(l => {{
+      l.classList.toggle("active", !!cur && l.getAttribute("href") === "#" + cur);
+    }});
   }}
-}});
+  window.addEventListener("scroll", updateNav, {{passive: true}});
+  updateNav();
+}}
 
 const scrollBtn = document.getElementById("scrollTop");
 window.addEventListener("scroll", () => {{
@@ -357,11 +424,12 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
         if g_count > DATE_VISIBLE:
             remaining = g_count - DATE_VISIBLE
             extra_cards = "".join(_card_html(a, color) for a in group[DATE_VISIBLE:])
+            # [개선] 날짜 컨텍스트를 onclick에 전달
             content_html += (
                 f'<div class="cards-extra" id="extra-{group_id}">{extra_cards}</div>'
                 f'<button class="expand-bar date-expand-bar" id="expbar-{group_id}" '
-                f'onclick="toggleExtra(\'{group_id}\',{remaining})" style="color:{color}">'
-                f'▾ &nbsp;나머지 <strong>{remaining}</strong>건 더 보기</button>'
+                f'onclick="toggleExtra(\'{group_id}\',{remaining},\'{date}\')" style="color:{color}">'
+                f'▾ &nbsp;<span class="expbar-date">{date}</span>&nbsp;나머지 <strong>{remaining}</strong>건 더 보기</button>'
             )
 
     if not articles:
@@ -374,13 +442,16 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
     else:
         body = f'<div class="cards-list">{content_html}</div>'
 
+    # [개선] 0건 섹션 클래스, aria 접근성 속성, chevron(›) 토글
+    empty_cls = " section-empty" if count == 0 else ""
     return (
-        f'<section class="section" id="sec-{cat}" style="--sec-c:{color}">'
-        f'<div class="section-header" onclick="toggleSec(\'{cat}\')">'
+        f'<section class="section{empty_cls}" id="sec-{cat}" style="--sec-c:{color}">'
+        f'<div class="section-header" role="button" tabindex="0" '
+        f'aria-expanded="true" aria-controls="body-{cat}" onclick="toggleSec(\'{cat}\')">'
         f'<div class="section-icon">{icon_html}</div>'
         f'<div class="section-title" style="color:{color}">{label}</div>'
         f'<span class="section-badge" style="background:{color}">{count}건</span>'
-        f'<span class="sec-toggle open" id="tgl-{cat}">▼</span>'
+        f'<span class="sec-toggle" id="tgl-{cat}">›</span>'
         f'</div>'
         f'<div id="body-{cat}">{body}</div>'
         f'</section>'
@@ -392,6 +463,10 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
 def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str:
     pw_hash = hashlib.sha256(SITE_PASSWORD.encode()).hexdigest()
 
+    # [개선] 수집 시각 표시
+    kst = timezone(timedelta(hours=9))
+    collected_at = datetime.now(kst).strftime("%m/%d %H:%M")
+
     nav_items = ""
     sections  = ""
 
@@ -399,14 +474,14 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
         articles  = news_by_category.get(cat, [])
         color     = CATEGORY_COLORS.get(cat, "#00ADE9")
         emoji     = CATEGORY_ICONS.get(cat, "📋")
-        # 국기 카테고리는 img 태그, 나머지는 이모지
         icon_html = _FLAG_IMG.get(cat, emoji)
         count     = len(articles)
 
-        # nav용 아이콘 (인라인이므로 img 태그 그대로 사용)
+        # [개선] 0건 nav 항목 흐리게
+        nav_empty_cls = " nav-empty" if count == 0 else ""
         nav_icon = _FLAG_IMG.get(cat, emoji)
         nav_items += (
-            f'<a href="#sec-{cat}" class="nav-link" style="--c:{color}">'
+            f'<a href="#sec-{cat}" class="nav-link{nav_empty_cls}" style="--c:{color}">'
             f'{nav_icon} {label} <span class="nav-count">{count}</span></a>'
         )
         sections += _section_html(cat, label, color, icon_html, articles)
@@ -434,8 +509,11 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
       <span style="font-size:11.5px;opacity:.7">접근 권한이 있는 구성원만 이용할 수 있습니다</span>
     </div>
     <div class="gate-label">비밀번호</div>
-    <input id="pw" class="gate-input" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
-    <button class="gate-btn" onclick="checkPw()">입장하기</button>
+    <div class="pw-wrap">
+      <input id="pw" class="gate-input" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
+      <button type="button" class="pw-toggle" onclick="togglePw()" title="비밀번호 표시/숨기기">👁</button>
+    </div>
+    <button type="button" class="gate-btn" onclick="checkPw()">입장하기</button>
     <div id="err" class="gate-err">⚠ 비밀번호가 올바르지 않습니다.</div>
   </div>
 </div>
@@ -447,7 +525,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
       <div>
         <div class="header-title">자동차 산업동향 브리핑</div>
         <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
-        <div class="header-meta">{report_date} 기준 &nbsp;·&nbsp; 매일 오전 7시 자동 업데이트</div>
+        <div class="header-meta">{report_date} &nbsp;·&nbsp; 수집 <span class="collect-time">{collected_at} KST</span> &nbsp;·&nbsp; 매일 오전 7시 업데이트</div>
       </div>
     </div>
   </header>
