@@ -4,7 +4,7 @@ NEWS_MAX_AGE_DAYS = 2
 SITE_PASSWORD = "HL2025"
 
 CATEGORY_LABELS = {
-    "recall_kr":     "국내 리콜·결함",
+    "recall_kr":     "국내 리콜",
     "recall_us":     "미국 리콜",
     "recall_global": "글로벌 리콜",
     "news":          "자동차 산업 동향 뉴스",

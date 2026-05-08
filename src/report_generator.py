@@ -2,7 +2,7 @@ import re
 import hashlib
 from src.config import CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS, SITE_PASSWORD
 
-VISIBLE_COUNT = 4  # 기본 표시 건수 (초과분은 접기)
+DATE_VISIBLE = 5  # 날짜 그룹별 기본 표시 건수 (초과분은 접기)
 
 _STAT_RE = re.compile(
     r'(\d{4})년\s*(\d{2})월 리콜 통계 — '
@@ -123,6 +123,7 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .cards-extra.open{display:block}
 .expand-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;border-top:1px solid var(--border);transition:background .15s}
 .expand-bar:hover{background:#f0f8fd}
+.date-expand-bar{font-size:12px;padding:7px 22px 10px;background:#f7fbff;border-top:1px dashed var(--border);margin-bottom:2px}
 
 /* Empty */
 .empty-state{padding:44px 24px;text-align:center}
@@ -321,64 +322,41 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
 
     # 날짜 내림차순 정렬
     sorted_articles = sorted(
-        articles[:30],
+        articles[:60],
         key=lambda a: _extract_date(a.get("published") or ""),
         reverse=True,
     )
 
-    # 날짜 구분선 포함 flat 아이템 리스트 구성
-    items: list[tuple[str, object]] = []  # ("header", date_str) | ("card", article)
-    last_date = None
+    # 날짜별 그룹핑
+    date_groups: dict[str, list[dict]] = {}
+    date_order: list[str] = []
     for a in sorted_articles:
         date = _extract_date(a.get("published") or "")
-        if date != last_date:
-            items.append(("header", date))
-            last_date = date
-        items.append(("card", a))
+        if date not in date_groups:
+            date_groups[date] = []
+            date_order.append(date)
+        date_groups[date].append(a)
 
-    # VISIBLE_COUNT 카드 기준으로 visible / extra 분리
-    card_count = 0
-    split_idx  = len(items)
-    for i, (typ, _) in enumerate(items):
-        if typ == "card":
-            card_count += 1
-            if card_count == VISIBLE_COUNT:
-                split_idx = i + 1
-                break
+    # 각 날짜 그룹별로 DATE_VISIBLE 건 노출, 초과분은 접기
+    content_html = ""
+    for date in date_order:
+        group = date_groups[date]
+        g_count = len(group)
+        group_id = f"{cat}-{date.replace('-', '')}"
 
-    visible_items = items[:split_idx]
-    extra_items   = items[split_idx:]
+        content_html += f'<div class="date-sep"><span>{date}</span></div>'
+        for a in group[:DATE_VISIBLE]:
+            content_html += _card_html(a, color)
 
-    # extra 첫 항목이 visible 마지막 날짜와 동일한 header면 중복 제거
-    if extra_items and extra_items[0][0] == "header":
-        last_visible_date = next(
-            (c for t, c in reversed(visible_items) if t == "header"), None
-        )
-        if extra_items[0][1] == last_visible_date:
-            extra_items = extra_items[1:]
-
-    def render(item_list: list) -> str:
-        html = ""
-        for typ, content in item_list:
-            if typ == "header":
-                html += f'<div class="date-sep"><span>{content}</span></div>'
-            else:
-                html += _card_html(content, color)
-        return html
-
-    visible_html = render(visible_items)
-    extra_html   = render(extra_items)
-
-    extra_block  = ""
-    expand_block = ""
-    if extra_html:
-        remaining   = sum(1 for t, _ in extra_items if t == "card")
-        extra_block = f'<div class="cards-extra" id="extra-{cat}">{extra_html}</div>'
-        expand_block = (
-            f'<button class="expand-bar" id="expbar-{cat}" '
-            f'onclick="toggleExtra(\'{cat}\',{remaining})" style="color:{color}">'
-            f'▾ &nbsp;나머지 <strong>{remaining}</strong>건 더 보기</button>'
-        )
+        if g_count > DATE_VISIBLE:
+            remaining = g_count - DATE_VISIBLE
+            extra_cards = "".join(_card_html(a, color) for a in group[DATE_VISIBLE:])
+            content_html += (
+                f'<div class="cards-extra" id="extra-{group_id}">{extra_cards}</div>'
+                f'<button class="expand-bar date-expand-bar" id="expbar-{group_id}" '
+                f'onclick="toggleExtra(\'{group_id}\',{remaining})" style="color:{color}">'
+                f'▾ &nbsp;나머지 <strong>{remaining}</strong>건 더 보기</button>'
+            )
 
     if not articles:
         body = (
@@ -388,7 +366,7 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
             '</div>'
         )
     else:
-        body = f'<div class="cards-list">{visible_html}</div>{extra_block}{expand_block}'
+        body = f'<div class="cards-list">{content_html}</div>'
 
     return (
         f'<section class="section" id="sec-{cat}" style="--sec-c:{color}">'

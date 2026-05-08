@@ -283,7 +283,7 @@ def fetch_cargokr_individual_recalls(max_days: int = 60) -> list[dict]:
         except Exception as ex:
             print(f"  [car.go.kr] 스크래핑 실패 ({url}): {ex}")
 
-    print("  [car.go.kr] 개별 리콜 수집 실패 — 통계 방식으로 전환")
+    print("  [car.go.kr] 개별 리콜 수집 실패 - 통계 방식으로 전환")
     return articles
 
 
@@ -402,31 +402,28 @@ def collect_all_news() -> dict[str, list[dict]]:
 
     print("뉴스 수집 시작...")
 
-    # 1. 오토헤럴드 RSS
+    # 1. 오토헤럴드 RSS — 모든 기사는 news/regulation으로만 분류 (recall_kr 제외)
     print("  [오토헤럴드] RSS 수집 중...")
-    ah_articles = fetch_rss("recall_kr", "https://www.autoherald.co.kr/rss/allArticle.xml", max_days)
-    recall_kw = ["리콜", "결함", "시정조치"]
-    reg_kw    = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
+    ah_articles = fetch_rss("news", "https://www.autoherald.co.kr/rss/allArticle.xml", max_days)
+    reg_kw = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
     for a in ah_articles:
-        t = a["title"]
-        if any(k in t for k in recall_kw):
-            result["recall_kr"].append(a)
-        elif any(k in t for k in reg_kw):
+        if any(k in a["title"] for k in reg_kw):
             result["regulation"].append({**a, "category": "regulation"})
         else:
             result["news"].append({**a, "category": "news"})
     print(f"  [오토헤럴드] {len(ah_articles)}건")
 
-    # 2. 네이버 뉴스
+    # 2. 네이버 뉴스 — recall_kr 쿼리 결과도 news로 이동 (car.go.kr 공식 데이터만 recall_kr)
     print("  [네이버] 검색 수집 중...")
     for category, queries in NAVER_QUERIES.items():
+        actual_cat = "news" if category == "recall_kr" else category
         naver_articles = fetch_naver_news(category, queries, max_days)
-        existing = {a["title"] for a in result[category]}
+        existing = {a["title"] for a in result[actual_cat]}
         for a in naver_articles:
             if a["title"] not in existing:
-                result[category].append(a)
+                result[actual_cat].append({**a, "category": actual_cat})
                 existing.add(a["title"])
-        print(f"  [네이버/{category}] {len(naver_articles)}건")
+        print(f"  [네이버/{category}→{actual_cat}] {len(naver_articles)}건")
 
     # 3. car.go.kr 개별 리콜 공고 (건별)
     print("  [car.go.kr] 개별 리콜 공고 수집 중...")
