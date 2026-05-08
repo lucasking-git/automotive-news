@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from src.config import CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS, SITE_PASSWORD
 
 DATE_VISIBLE = 5   # 날짜 그룹별 기본 표시 건수 (초과분은 접기)
-FLAT_VISIBLE = 10  # 날짜 그룹 없는 섹션(NHTSA 등) 기본 표시 건수
+FLAT_VISIBLE = 5   # 날짜 그룹 없는 섹션(NHTSA 등) 기본 표시 건수
 
 _STAT_RE = re.compile(
     r'(\d{4})년\s*(\d{2})월 리콜 통계 — '
@@ -108,7 +108,7 @@ main{max-width:1000px;margin:24px auto;padding:0 20px 72px}
 
 /* Date separator — 좌측 정렬 + 컬러 뱃지 */
 .date-sep{display:flex;align-items:center;padding:14px 20px 6px}
-.date-sep-label{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#0055A4;background:#dbeafe;border:1px solid #93c5fd;border-radius:5px;padding:3px 10px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0}
+.date-sep-label{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#0055A4;background:#dbeafe;border:1px solid #93c5fd;border-radius:6px;padding:5px 14px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0}
 .date-sep-line{flex:1;height:1px;background:#e2ebf7;margin-left:10px}
 
 /* Cards */
