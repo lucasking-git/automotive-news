@@ -3,268 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>자동차 산업동향 브리핑</title>
+<title>자동차 산업동향 브리핑 | HL Mando CQO</title>
 <style>
 :root {
-  --c-kr:   #ef4444;
-  --c-us:   #f97316;
-  --c-oem:  #3b82f6;
-  --c-reg:  #10b981;
-  --bg:     #f1f5f9;
-  --surface:#ffffff;
-  --text-1: #0f172a;
-  --text-2: #475569;
-  --text-3: #94a3b8;
-  --border: #e2e8f0;
-  --sh-sm:  0 1px 3px rgba(0,0,0,.07);
-  --sh:     0 4px 12px rgba(0,0,0,.07);
-  --sh-lg:  0 12px 24px rgba(0,0,0,.1);
-  --r:      12px;
-  --r-sm:   8px;
+  --brand:    #00ADE9;
+  --brand-dk: #0066B2;
+  --brand-dkk:#003B6F;
+  --c-kr:     #00ADE9;
+  --c-us:     #0055A4;
+  --c-gl:     #5B9BD5;
+  --c-news:   #0099CC;
+  --c-reg:    #00A896;
+  --bg:       #f0f8fd;
+  --surface:  #ffffff;
+  --text-1:   #0f172a;
+  --text-2:   #475569;
+  --text-3:   #94a3b8;
+  --border:   #dbeafe;
+  --sh:       0 4px 12px rgba(0,102,178,.08);
+  --sh-lg:    0 12px 28px rgba(0,102,178,.14);
+  --r:        12px;
+  --r-sm:     8px;
 }
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-body{
-  font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;
-  background:var(--bg);color:var(--text-1);min-height:100vh;line-height:1.6;
-}
-
-/* Scrollbar */
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;line-height:1.6}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb{background:#93c5fd;border-radius:3px}
 
-/* ════════════════════════════════
-   GATE
-════════════════════════════════ */
-#gate{
-  position:fixed;inset:0;
-  background:linear-gradient(145deg,#0c0e1a 0%,#13172e 40%,#0e1628 100%);
-  display:flex;align-items:center;justify-content:center;z-index:999;
-}
-
-/* 배경 도트 */
-#gate::before{
-  content:'';position:absolute;inset:0;
-  background-image:radial-gradient(rgba(99,102,241,.18) 1px,transparent 1px);
-  background-size:28px 28px;
-  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 40%,transparent 100%);
-  pointer-events:none;
-}
-
-.gate-card{
-  position:relative;z-index:1;
-  background:rgba(255,255,255,.05);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:20px;padding:48px 40px;width:380px;text-align:center;
-  animation:cardUp .5s cubic-bezier(.34,1.56,.64,1) both;
-}
-
-@keyframes cardUp{
-  from{opacity:0;transform:translateY(24px) scale(.96)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
-
-.gate-emblem{
-  width:68px;height:68px;
-  background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);
-  border-radius:18px;margin:0 auto 22px;
-  display:flex;align-items:center;justify-content:center;font-size:30px;
-  box-shadow:0 8px 28px rgba(99,102,241,.5);
-}
-
-.gate-logo{font-size:21px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:6px}
-.gate-sub{font-size:12.5px;color:rgba(255,255,255,.45);margin-bottom:36px;line-height:1.5}
-
-.gate-label{
-  font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  color:rgba(255,255,255,.5);text-align:left;margin-bottom:8px;
-}
-
-.gate-input{
-  width:100%;padding:13px 16px;
-  background:rgba(255,255,255,.07);
-  border:1.5px solid rgba(255,255,255,.14);
-  border-radius:var(--r-sm);font-size:15px;color:#fff;
-  outline:none;letter-spacing:2px;transition:border-color .2s,background .2s;
-}
+/* ── Gate ── */
+#gate{position:fixed;inset:0;background:linear-gradient(145deg,#001a33 0%,#003B6F 45%,#00264d 100%);display:flex;align-items:center;justify-content:center;z-index:999}
+#gate::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(0,173,233,.18) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 40%,transparent 100%);pointer-events:none}
+.gate-card{position:relative;z-index:1;background:rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,173,233,.2);border-radius:20px;padding:48px 40px;width:400px;text-align:center;animation:cardUp .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes cardUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.gate-emblem{width:72px;height:72px;background:linear-gradient(135deg,#00ADE9 0%,#0055A4 100%);border-radius:18px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 28px rgba(0,173,233,.5)}
+.gate-logo{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:4px}
+.gate-brand{font-size:11.5px;color:#00ADE9;font-weight:700;letter-spacing:1.2px;margin-bottom:8px}
+.gate-sub{font-size:12.5px;color:rgba(255,255,255,.45);margin-bottom:36px;line-height:1.65}
+.gate-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);text-align:left;margin-bottom:8px}
+.gate-input{width:100%;padding:13px 16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(0,173,233,.22);border-radius:var(--r-sm);font-size:15px;color:#fff;outline:none;letter-spacing:2px;transition:border-color .2s,background .2s}
 .gate-input::placeholder{color:rgba(255,255,255,.28);letter-spacing:normal}
-.gate-input:focus{border-color:#6366f1;background:rgba(255,255,255,.1)}
-
-.gate-btn{
-  width:100%;margin-top:14px;padding:14px;
-  background:linear-gradient(135deg,#6366f1,#8b5cf6);
-  color:#fff;border:none;border-radius:var(--r-sm);
-  font-size:15px;font-weight:700;cursor:pointer;
-  box-shadow:0 4px 16px rgba(99,102,241,.45);
-  transition:transform .15s,box-shadow .15s;
-}
-.gate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.55)}
+.gate-input:focus{border-color:#00ADE9;background:rgba(0,173,233,.1)}
+.gate-btn{width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#00ADE9,#0055A4);color:#fff;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,173,233,.4);transition:transform .15s,box-shadow .15s}
+.gate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,173,233,.55)}
 .gate-btn:active{transform:translateY(0)}
-
-.gate-err{
-  margin-top:12px;font-size:13px;color:#f87171;display:none;
-  animation:shake .35s;
-}
+.gate-err{margin-top:12px;font-size:13px;color:#f87171;display:none;animation:shake .35s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-/* ════════════════════════════════
-   MAIN LAYOUT
-════════════════════════════════ */
+/* ── Main ── */
 #main{display:none;animation:fadeUp .4s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* Header */
-header{
-  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
-  color:#fff;padding:16px 24px;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 20px rgba(0,0,0,.35);
-}
-
-.header-inner{
-  max-width:960px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:12px;
-}
-
+header{background:linear-gradient(135deg,var(--brand-dkk) 0%,var(--brand-dk) 100%);color:#fff;padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,50,120,.4)}
+.header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .header-left{display:flex;align-items:center;gap:14px}
-
-.header-icon{
-  width:40px;height:40px;flex-shrink:0;
-  background:linear-gradient(135deg,#6366f1,#8b5cf6);
-  border-radius:10px;display:flex;align-items:center;justify-content:center;
-  font-size:20px;box-shadow:0 4px 12px rgba(99,102,241,.4);
-}
-
+.header-icon{width:46px;height:46px;flex-shrink:0;background:linear-gradient(135deg,#00ADE9,#0055A4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,173,233,.45)}
 .header-title{font-size:18px;font-weight:800;letter-spacing:-.4px}
-.header-meta{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
-
-.header-right{display:flex;align-items:center;gap:10px}
-
-.stat-chip{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
-  border-radius:20px;padding:7px 14px;font-size:12.5px;color:rgba(255,255,255,.7);
-}
-.stat-chip strong{color:#fbbf24;font-weight:700}
+.header-org{font-size:12px;color:#00ADE9;font-weight:700;letter-spacing:.4px;margin-top:2px}
+.header-meta{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.stat-chip{display:flex;align-items:center;gap:6px;background:rgba(0,173,233,.12);border:1px solid rgba(0,173,233,.25);border-radius:20px;padding:7px 14px;font-size:12.5px;color:rgba(255,255,255,.7)}
+.stat-chip strong{color:#00ADE9;font-weight:700}
 
 /* Nav */
-nav{
-  background:var(--surface);border-bottom:1px solid var(--border);
-  overflow-x:auto;white-space:nowrap;scrollbar-width:none;
-}
+nav{background:var(--surface);border-bottom:2.5px solid var(--brand);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
-
-.nav-inner{max-width:960px;margin:0 auto;display:flex;padding:0 16px}
-
-.nav-link{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:14px 16px;font-size:13px;font-weight:600;
-  color:var(--text-2);text-decoration:none;
-  border-bottom:2.5px solid transparent;
-  transition:color .15s,border-color .15s;
-}
+.nav-inner{max-width:1000px;margin:0 auto;display:flex;padding:0 16px}
+.nav-link{display:inline-flex;align-items:center;gap:6px;padding:13px 15px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
 .nav-link:hover{color:var(--c);border-bottom-color:var(--c)}
+.nav-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8f4fd;color:var(--text-3);transition:background .15s,color .15s}
+.nav-link:hover .nav-count{background:rgba(0,173,233,.12);color:var(--c)}
 
-.nav-count{
-  font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
-  background:#f1f5f9;color:var(--text-3);
-  transition:background .15s,color .15s;
-}
-.nav-link:hover .nav-count{background:var(--c-bg,#f1f5f9);color:var(--c)}
-
-/* Main */
-main{max-width:960px;margin:28px auto;padding:0 20px 72px}
+/* Main content */
+main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 
 /* Section */
-.section{
-  background:var(--surface);border-radius:var(--r);
-  margin-bottom:24px;box-shadow:var(--sh);overflow:hidden;
-  transition:box-shadow .2s;
-}
+.section{background:var(--surface);border-radius:var(--r);margin-bottom:24px;box-shadow:var(--sh);overflow:hidden;transition:box-shadow .2s;border-left:4px solid var(--sec-c,#00ADE9)}
 .section:hover{box-shadow:var(--sh-lg)}
-
-.section-header{
-  display:flex;align-items:center;gap:12px;
-  padding:18px 22px 16px;border-bottom:1px solid var(--border);
-}
-
-.section-icon{
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-}
-
+.section-header{display:flex;align-items:center;gap:12px;padding:17px 22px 15px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s}
+.section-header:hover{background:#f7fbff}
+.section-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(0,173,233,.07)}
 .section-title{font-size:15px;font-weight:700;flex:1}
-
-.section-badge{
-  font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;color:#fff;
-}
+.section-badge{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;color:#fff}
+.sec-toggle{font-size:13px;color:var(--text-3);margin-left:4px;transition:transform .25s}
+.sec-toggle.open{transform:rotate(180deg)}
 
 /* Cards */
 .cards-list{padding:4px 0}
-
-.card{
-  padding:15px 22px;border-bottom:1px solid #f8fafc;
-  transition:background .15s;
-}
+.card{padding:15px 22px;border-bottom:1px solid #f0f8fd;transition:background .15s}
 .card:last-child{border-bottom:none}
-.card:hover{background:#fafbff}
-
-.card-meta{
-  display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap;
-}
-
-.card-date{
-  display:inline-flex;align-items:center;gap:3px;
-  font-size:11px;color:var(--text-3);
-  background:#f8fafc;border-radius:4px;padding:2px 8px;
-}
-
-.card-title{
-  font-size:14px;font-weight:600;line-height:1.55;
-  text-decoration:none;display:block;
-  transition:opacity .15s;
-}
+.card:hover{background:#f5faff}
+.card-meta{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap}
+.card-date{display:inline-flex;align-items:center;font-size:11px;color:var(--text-3);background:#f0f8fd;border-radius:4px;padding:2px 8px}
+.card-source{font-size:11px;color:#94a3b8;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:2px 8px}
+.card-title{font-size:14px;font-weight:600;line-height:1.55;text-decoration:none;display:block;transition:opacity .15s}
 .card-title:hover{text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
-
-.card-summary{
-  font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:6px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-}
+.card-summary{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-summary.expanded{display:block;-webkit-line-clamp:unset}
-
-.more-btn{
-  font-size:12px;font-weight:600;padding:3px 0;margin-top:5px;
-  background:none;border:none;cursor:pointer;display:inline-block;
-  opacity:.65;transition:opacity .15s;
-}
+.more-btn{font-size:12px;font-weight:600;padding:3px 0;margin-top:5px;background:none;border:none;cursor:pointer;display:inline-block;opacity:.6;transition:opacity .15s}
 .more-btn:hover{opacity:1}
+
+/* Recall stat card */
+.recall-stat-card{padding:16px 22px;border-bottom:1px solid #f0f8fd}
+.recall-stat-title{font-size:14px;font-weight:700;margin-bottom:10px}
+.recall-stat-grid{display:flex;gap:10px;flex-wrap:wrap}
+.recall-stat-item{background:#f0f8fd;border:1px solid #bee3f8;border-radius:8px;padding:10px 16px;text-align:center;flex:1;min-width:90px}
+.recall-stat-item .rs-label{font-size:11px;color:var(--text-3);margin-bottom:2px}
+.recall-stat-item .rs-value{font-size:17px;font-weight:800;color:var(--brand-dk)}
+.recall-stat-item .rs-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.recall-detail-link{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--brand);text-decoration:none}
+.recall-detail-link:hover{text-decoration:underline}
+
+/* Extra items (5+ collapse) */
+.cards-extra{display:none}
+.cards-extra.open{display:block}
+.expand-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;border-top:1px solid var(--border);transition:background .15s}
+.expand-bar:hover{background:#f0f8fd}
 
 /* Empty */
 .empty-state{padding:44px 24px;text-align:center}
 .empty-icon{font-size:36px;margin-bottom:10px;opacity:.3}
 .empty-text{font-size:13px;color:var(--text-3)}
 
-/* Scroll-to-top */
-#scrollTop{
-  position:fixed;bottom:28px;right:28px;
-  width:44px;height:44px;border-radius:50%;
-  background:var(--text-1);color:#fff;
-  border:none;cursor:pointer;font-size:18px;
-  display:none;align-items:center;justify-content:center;
-  box-shadow:var(--sh-lg);transition:transform .2s;z-index:50;
-}
+/* Scroll top */
+#scrollTop{position:fixed;bottom:28px;right:28px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00ADE9,#0055A4);color:#fff;border:none;cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:var(--sh-lg);transition:transform .2s;z-index:50}
 #scrollTop.visible{display:flex}
 #scrollTop:hover{transform:translateY(-3px)}
 
 /* Footer */
-footer{
-  background:var(--surface);border-top:1px solid var(--border);
-  text-align:center;font-size:12px;color:var(--text-3);padding:16px;
-}
+footer{background:var(--brand-dkk);border-top:2px solid rgba(0,173,233,.25);text-align:center;font-size:12px;color:rgba(255,255,255,.4);padding:22px 16px}
+footer strong{color:rgba(255,255,255,.75)}
+footer .ft-div{margin:0 8px;opacity:.3}
 </style>
 </head>
 <body>
@@ -273,8 +142,13 @@ footer{
 <div id="gate">
   <div class="gate-card">
     <div class="gate-emblem">🚗</div>
-    <div class="gate-logo">자동차 산업동향</div>
-    <div class="gate-sub">품질기획팀 전용 브리핑 페이지입니다<br>접근 권한이 있는 구성원만 이용할 수 있습니다</div>
+    <div class="gate-logo">자동차 산업동향 브리핑</div>
+    <div class="gate-brand">HL MANDO &nbsp;·&nbsp; CQO &nbsp;·&nbsp; QUALITY PLANNING</div>
+    <div class="gate-sub">
+      HL Mando CQO 조직 Quality Planning에서 관리하는<br>
+      품질기획팀 전용 브리핑 페이지입니다<br>
+      <span style="font-size:11.5px;opacity:.7">접근 권한이 있는 구성원만 이용할 수 있습니다</span>
+    </div>
     <div class="gate-label">비밀번호</div>
     <input id="pw" class="gate-input" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
     <button class="gate-btn" onclick="checkPw()">입장하기</button>
@@ -290,7 +164,8 @@ footer{
         <div class="header-icon">📋</div>
         <div>
           <div class="header-title">자동차 산업동향 브리핑</div>
-          <div class="header-meta">2026년 05월 06일 기준 · 매일 오전 7시 자동 업데이트</div>
+          <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
+          <div class="header-meta">2026년 05월 06일 기준 &nbsp;·&nbsp; 매일 오전 7시 자동 업데이트</div>
         </div>
       </div>
       <div class="header-right">
@@ -301,285 +176,381 @@ footer{
 
   <nav>
     <div class="nav-inner">
-      <a href="#sec-recall_kr"  class="nav-link" style="--c:var(--c-kr)"  >🔴 국내 리콜·결함  <span class="nav-count" style="--c:var(--c-kr)">3</span></a>
-      <a href="#sec-recall_us"  class="nav-link" style="--c:var(--c-us)"  >🟠 미국·글로벌 리콜 <span class="nav-count" style="--c:var(--c-us)">45</span></a>
-      <a href="#sec-oem"        class="nav-link" style="--c:var(--c-oem)" >🔵 OEM 동향        <span class="nav-count" style="--c:var(--c-oem)">13</span></a>
-      <a href="#sec-regulation" class="nav-link" style="--c:var(--c-reg)" >🟢 법규·규제        <span class="nav-count" style="--c:var(--c-reg)">0</span></a>
+      <a href="#sec-recall_kr"     class="nav-link" style="--c:var(--c-kr)"  >🇰🇷 국내 리콜·결함        <span class="nav-count">3</span></a>
+      <a href="#sec-recall_us"     class="nav-link" style="--c:var(--c-us)"  >🇺🇸 미국 리콜             <span class="nav-count">45</span></a>
+      <a href="#sec-recall_global" class="nav-link" style="--c:var(--c-gl)"  >🌍 글로벌 리콜            <span class="nav-count">0</span></a>
+      <a href="#sec-news"          class="nav-link" style="--c:var(--c-news)">📰 자동차 산업 동향 뉴스  <span class="nav-count">13</span></a>
+      <a href="#sec-regulation"    class="nav-link" style="--c:var(--c-reg)" >⚖️ 법규·규제              <span class="nav-count">0</span></a>
     </div>
   </nav>
 
   <main>
 
-    <!-- 국내 리콜·결함 -->
-    <section class="section" id="sec-recall_kr">
-      <div class="section-header">
-        <div class="section-icon" style="background:#fff1f2;color:var(--c-kr)">🔔</div>
+    <!-- ════ 국내 리콜·결함 ════ -->
+    <section class="section" id="sec-recall_kr" style="--sec-c:var(--c-kr)">
+      <div class="section-header" onclick="toggleSec('recall_kr')">
+        <div class="section-icon">🇰🇷</div>
         <div class="section-title" style="color:var(--c-kr)">국내 리콜·결함</div>
         <span class="section-badge" style="background:var(--c-kr)">3건</span>
+        <span class="sec-toggle open" id="tgl-recall_kr">▼</span>
       </div>
-      <div class="cards-list">
+      <div id="body-recall_kr">
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 15:47</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60349" class="card-title" style="color:var(--c-kr)" target="_blank" rel="noopener noreferrer">[김훈기 칼럼] "결함보다 제도가 문제" 전기차 시대 레몬법의 현실</a>
-          <p class="card-summary">전기차 시대 소비자 보호 제도의 실효성 논란이 확산되고 있다(오토헤럴드 DB) [오토헤럴드 김훈기 기자] 캐나다 퀘벡에서 시행된 레몬법이 실제 적용 과정에서 한계를 드러내며 전기차 시대 소비자 보호 제도의 실효성 논란이 확산되고 있다. 결함 차량에 대한 법적 보호 장치가 존재함에도 불구하고, 실제로는 소비자가 이를 활용하기 어려운 구조가 문제로 지적된다.</p>
-          <button class="more-btn" style="color:var(--c-kr)" onclick="toggleMore(this)">더보기 ▾</button>
+        <div class="cards-list">
+          <div class="card">
+            <div class="card-meta">
+              <span class="card-date">2026-05-04 15:47</span>
+              <span class="card-source">오토헤럴드</span>
+            </div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60349" class="card-title" style="color:var(--c-kr)" target="_blank" rel="noopener noreferrer">[김훈기 칼럼] "결함보다 제도가 문제" 전기차 시대 레몬법의 현실</a>
+            <p class="card-summary">전기차 시대 소비자 보호 제도의 실효성 논란이 확산되고 있다. 캐나다 퀘벡에서 시행된 레몬법이 실제 적용 과정에서 한계를 드러내며 전기차 시대 소비자 보호 제도의 실효성 논란이 확산되고 있다. 결함 차량에 대한 법적 보호 장치가 존재함에도 불구하고, 실제로는 소비자가 이를 활용하기 어려운 구조가 문제로 지적된다.</p>
+            <button class="more-btn" style="color:var(--c-kr)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05</span></div>
-          <a href="https://www.car.go.kr/ri/stat/list.do" class="card-title" style="color:var(--c-kr)" target="_blank" rel="noopener noreferrer">[car.go.kr] 2026년 05월 리콜 통계 — 국산 5건/1,238대, 수입 19건/10,266대, 합계 24건/11,504대</a>
-          <p class="card-summary">자동차리콜센터(car.go.kr) 공식 월별 리콜 통계입니다.</p>
+        <!-- car.go.kr 2026년 05월 -->
+        <div class="recall-stat-card">
+          <div class="card-meta">
+            <span class="card-date">2026-05</span>
+            <span class="card-source">자동차리콜센터 (car.go.kr)</span>
+          </div>
+          <div class="recall-stat-title" style="color:var(--c-kr)">2026년 05월 리콜 현황</div>
+          <div class="recall-stat-grid">
+            <div class="recall-stat-item">
+              <div class="rs-label">국산</div>
+              <div class="rs-value">5건</div>
+              <div class="rs-sub">1,238대</div>
+            </div>
+            <div class="recall-stat-item">
+              <div class="rs-label">수입</div>
+              <div class="rs-value">19건</div>
+              <div class="rs-sub">10,266대</div>
+            </div>
+            <div class="recall-stat-item">
+              <div class="rs-label">합계</div>
+              <div class="rs-value">24건</div>
+              <div class="rs-sub">11,504대</div>
+            </div>
+          </div>
+          <a href="https://www.car.go.kr/ri/stat/list.do" class="recall-detail-link" target="_blank" rel="noopener noreferrer">→ 개별 리콜 건 상세보기 (car.go.kr)</a>
         </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05</span></div>
-          <a href="https://www.car.go.kr/ri/stat/list.do" class="card-title" style="color:var(--c-kr)" target="_blank" rel="noopener noreferrer">[car.go.kr] 2026년 04월 리콜 통계 — 국산 19건/341,772대, 수입 56건/33,072대, 합계 75건/374,844대</a>
-          <p class="card-summary">자동차리콜센터(car.go.kr) 공식 월별 리콜 통계입니다.</p>
+        <!-- car.go.kr 2026년 04월 -->
+        <div class="recall-stat-card">
+          <div class="card-meta">
+            <span class="card-date">2026-04</span>
+            <span class="card-source">자동차리콜센터 (car.go.kr)</span>
+          </div>
+          <div class="recall-stat-title" style="color:var(--c-kr)">2026년 04월 리콜 현황</div>
+          <div class="recall-stat-grid">
+            <div class="recall-stat-item">
+              <div class="rs-label">국산</div>
+              <div class="rs-value">19건</div>
+              <div class="rs-sub">341,772대</div>
+            </div>
+            <div class="recall-stat-item">
+              <div class="rs-label">수입</div>
+              <div class="rs-value">56건</div>
+              <div class="rs-sub">33,072대</div>
+            </div>
+            <div class="recall-stat-item">
+              <div class="rs-label">합계</div>
+              <div class="rs-value">75건</div>
+              <div class="rs-sub">374,844대</div>
+            </div>
+          </div>
+          <a href="https://www.car.go.kr/ri/stat/list.do" class="recall-detail-link" target="_blank" rel="noopener noreferrer">→ 개별 리콜 건 상세보기 (car.go.kr)</a>
         </div>
 
       </div>
     </section>
 
-    <!-- 미국·글로벌 리콜 -->
-    <section class="section" id="sec-recall_us">
-      <div class="section-header">
-        <div class="section-icon" style="background:#fff7ed;color:var(--c-us)">🌐</div>
-        <div class="section-title" style="color:var(--c-us)">미국·글로벌 리콜</div>
+    <!-- ════ 미국 리콜 ════ -->
+    <section class="section" id="sec-recall_us" style="--sec-c:var(--c-us)">
+      <div class="section-header" onclick="toggleSec('recall_us')">
+        <div class="section-icon">🇺🇸</div>
+        <div class="section-title" style="color:var(--c-us)">미국 리콜</div>
         <span class="section-badge" style="background:var(--c-us)">45건</span>
+        <span class="sec-toggle open" id="tgl-recall_us">▼</span>
       </div>
-      <div class="cards-list">
+      <div id="body-recall_us">
+        <div class="cards-list">
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-22</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V256000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Toyota RAV4 2025 — SEATS:CRITICAL FASTENERS</a>
-          <p class="card-summary">Toyota Motor Engineering & Manufacturing (Toyota) is recalling certain 2025 RAV 4 vehicles. The front seat brackets for the seat rails may be welded improperly. Improperly welded seat brackets can prevent the seat from adequately restraining an occupant during a crash, increasing the risk of injury.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-22</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V256000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Toyota RAV4 2025 — SEATS:CRITICAL FASTENERS</a>
+            <p class="card-summary">Toyota Motor Engineering & Manufacturing (Toyota) is recalling certain 2025 RAV 4 vehicles. The front seat brackets for the seat rails may be welded improperly. Improperly welded seat brackets can prevent the seat from adequately restraining an occupant during a crash, increasing the risk of injury.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-21</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Elantra 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
+            <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-21</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Tucson 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
+            <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
         </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-21</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Elantra 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
-          <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+        <!-- 5건 초과분 (기본 접힘) -->
+        <div class="cards-extra" id="extra-recall_us">
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-21</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V254000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Tucson 2026 — AIR BAGS:SENSOR:SIDE IMPACT</a>
-          <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2025 Elantra N, 2026 Tucson, Tucson Hybrid, Tucson Plug-In Hybrid Electric (PHEV), and Elantra vehicles. The B-pillar impact sensors may have been misassembled, which can delay air bag deployment. Air bags that do not deploy as intended increase the risk of injury in a crash.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2024 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2026 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2022 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2026 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2023 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-10</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
+            <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV80 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2025 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-10</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V229000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Genesis GV70 2025 — FUEL SYSTEM, GASOLINE:DELIVERY:HOSES, LINES/PIPING, AND FITTINGS</a>
-          <p class="card-summary">Hyundai Motor America (Genesis) is recalling certain Genesis 2022-2026 GV70, 2023-2025 G90, 2021-2025 G80, and GV80 vehicles. Fuel may leak at the pipe connection between the fuel pipe and fuel rail. A fuel leak increases the risk of a fire.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2026 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-06</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2025 — SEAT BELTS:FRONT:ANCHORAGE</a>
-          <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-04-06</span><span class="card-source">NHTSA (nhtsa.gov)</span></div>
+            <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2024 — SEAT BELTS:FRONT:ANCHORAGE</a>
+            <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
+            <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-06</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2026 — SEAT BELTS:FRONT:ANCHORAGE</a>
-          <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
+        </div><!-- /extra -->
 
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-04-06</span></div>
-          <a href="https://www.nhtsa.gov/vehicle-safety/recalls#26V218000" class="card-title" style="color:var(--c-us)" target="_blank" rel="noopener noreferrer">[NHTSA] Hyundai Santa Fe 2024 — SEAT BELTS:FRONT:ANCHORAGE</a>
-          <p class="card-summary">Hyundai Motor America (Hyundai) is recalling certain 2023-2025 Hyundai Ioniq 6, 2023-2026 Genesis G90, 2024-2026 Hyundai Santa Fe, and Hyundai Santa Fe Hybrid vehicles. The driver and passenger seat belt anchors may detach. A detached seat belt anchor will not adequately restrain the seat occupant, increasing the risk of injury in a crash.</p>
-          <button class="more-btn" style="color:var(--c-us)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- OEM 동향 -->
-    <section class="section" id="sec-oem">
-      <div class="section-header">
-        <div class="section-icon" style="background:#eff6ff;color:var(--c-oem)">📊</div>
-        <div class="section-title" style="color:var(--c-oem)">OEM 동향</div>
-        <span class="section-badge" style="background:var(--c-oem)">13건</span>
-      </div>
-      <div class="cards-list">
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-06 05:45</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60351" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">BMW, 전기차 누적 생산 200만대 돌파... 2013년 i3 이후 13년만</a>
-          <p class="card-summary">BMW 그룹의 200만 번째 순수 전기차인 i5 M60 xDrive 세단과 생산 직원들이 기념 촬영을 하고 있다. 해당 차량은 스페인 고객에게 인도될 예정이다. (BMW) [오토헤럴드 김흥식 기자] BMW가 글로벌 누적 순수 전기차(BEV) 생산 200만 대를 돌파했다. 200만 번째 전기차는 독일 딩골핑 공장에서 생산된 BMW i5 M60 xDrive 세단이다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 16:14</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60336" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">완성차 4월 실적 전년비 3.4% 감소... 기아 내수 28년만 현대차 추월</a>
-          <p class="card-summary">지난달 국내 완성차 5개사의 글로벌 판매는 업체별 희비가 크게 엇갈린 가운데 전체적으로는 감소세로 전환됐다. 현대자동차의 실적 둔화가 전체 흐름을 끌어내린 반면 기아와 GM 한국사업장, KG모빌리티는 증가세를 유지하며 선전했다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 14:38</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60348" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">세계가 주목한 베이징 모터쇼 '10일간 128만 명' 역대 최대 기록</a>
-          <p class="card-summary">현지시간 지난 3일 폐막한 '2026 오토 차이나'는 10일간 총 128만 명의 관람객이 방문한 것으로 나타났다. 전동화와 지능화 기술을 중심으로 글로벌 자동차 산업의 무게 중심이 이동하는 가운데 이번 모터쇼는 중국 자동차 산업의 위상 변화를 상징적으로 보여줬다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 13:55</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60346" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">40억 원대 BYD 전기차 "이게 팔릴까 했지만" 모터쇼 현장에서 계약</a>
-          <p class="card-summary">BYD 양왕 U9 익스트림이 '2026 오토 차이나'에서 대당 2000만 위안(약 43억 원) 이상에 판매됐다. BYD가 고급 전기차 브랜드 양왕(Yangwang)을 통해 선보인 전기 하이퍼카 'U9 익스트림'이 전시장 현장 계약으로 이어지며 화제를 모았다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 13:12</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60345" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">100억 마일 달린 테슬라 FSD...지구 400만 바퀴, 완전 자율주행은 어디쯤?</a>
-          <p class="card-summary">테슬라 주행보조 시스템 FSD(Full Self-Driving)가 누적 주행거리 100억 마일(약 160억 km)을 돌파했다. CEO 일론 머스크가 '완전 자율주행' 구현을 위한 기준으로 제시했던 수치에 도달했으나, 완전 자율주행의 실현 시점은 여전히 불투명하다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 11:55</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60333" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">[김흥식 칼럼] 경찰도 헷갈리는 '우회전' 일본의 단순 명료한 신호 체계</a>
-          <p class="card-summary">우회전 차량에 대한 단속을 강화한 이후 억울함을 호소하는 운전자들이 늘고 있다. 우회전 표시등 녹색 신호에 맞춰 진행했다가 단속된 사례가 속출하며, 일본의 단순 명료한 신호 체계와 비교하는 논의가 이어지고 있다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 10:58</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60344" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">[EV 트렌드] BYD, 1분기 순이익 55% 급감 '가격 경쟁 직격탄'</a>
-          <p class="card-summary">중국 BYD가 2026년 1분기 실적에서 큰 폭의 이익 감소를 기록했다. BYD의 1분기 순이익은 약 40억 위안(약 8600억 원)으로 전년 동기 대비 55% 급감, 판매 확대에도 불구하고 수익성이 악화되며 가격 경쟁 압박을 그대로 드러냈다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 10:34</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60343" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">[모빌리티 인사이트] 전기차 시대에도 '관세 전쟁' 車 산업 변수로</a>
-          <p class="card-summary">도널드 트럼프 미국 대통령이 유럽산 자동차에 대한 관세를 기존 15%에서 25%로 인상하겠다고 밝히면서 글로벌 자동차 산업이 다시 통상 리스크 중심으로 이동하고 있다. EU가 기존 무역 합의를 충족하지 못했다는 판단이 배경이다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 09:31</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60341" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">렉서스, 3열 전기 SUV 'TZ' 공개 임박…전동화 플래그십 등장</a>
-          <p class="card-summary">렉서스가 브랜드 전동화 전략의 핵심 모델로 꼽히는 대형 전기 SUV 'TZ' 공개를 예고했다. 3열 구조를 갖춘 순수 전기 SUV로, 기존 TX를 대체하는 전동화 플래그십 역할이 예상되며 오는 7일 공개될 예정이다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 09:20</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60339" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">한국타이어 '아이온', 유럽 EV 시장 공략 가속…풀라인업 경쟁력 부각</a>
-          <p class="card-summary">한국타이어가 유럽 전기차 시장 공략에 속도를 높인다. 전기차 전용 타이어 브랜드 '아이온(iON)'을 앞세워 영국 주요 전시회를 무대로 글로벌 프리미엄 브랜드 위상 강화에 나선다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 09:09</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60338" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">현대 N 페스티벌 2026 시즌 개막, 나이트·내구 레이스 도입 격전 예고</a>
-          <p class="card-summary">현대차가 국내 최대 규모 원메이크 레이싱 대회인 '2026 현대 N 페스티벌'의 막을 올린다. 5월 8일부터 10일까지 용인 에버랜드 스피드웨이에서 열리는 1라운드를 시작으로, 올해는 나이트 레이스와 내구 레이스가 새롭게 도입된다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 09:05</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60335" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">'선택지 확대한 4개 트림 출시' 토요타, RAV4로 SUV 시장 공략</a>
-          <p class="card-summary">토요타코리아가 '올 뉴 RAV4(ALL-NEW RAV4)'를 다음달 16일 국내 출시한다. 5월 4일부터 전국 토요타 공식 딜러 전시장에서 사전계약을 실시하며, 4개 트림으로 소비자 선택 폭을 넓혔다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
-        <div class="card">
-          <div class="card-meta"><span class="card-date">2026-05-04 08:36</span></div>
-          <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60332" class="card-title" style="color:var(--c-oem)" target="_blank" rel="noopener noreferrer">'전략과 수요 간 괴리' 잘 팔리는데 단종, 포르쉐 마칸 생산 종료</a>
-          <p class="card-summary">포르쉐가 브랜드 핵심 볼륨 모델인 '마칸(Macan)' 내연기관 모델의 생산을 2026년 여름 종료한다. 전동화 전략에 따른 결정이지만, 시장 수요가 여전히 높은 상황에서의 단종이라 전략과 수요 간 간극이 드러나는 사례로 평가된다.</p>
-          <button class="more-btn" style="color:var(--c-oem)" onclick="toggleMore(this)">더보기 ▾</button>
-        </div>
-
+        <button class="expand-bar" id="expbar-recall_us" onclick="toggleExtra('recall_us',11)" style="color:var(--c-us)">
+          ▾ &nbsp;나머지 <strong id="expcount-recall_us">11</strong>건 더 보기
+        </button>
       </div>
     </section>
 
-    <!-- 법규·규제 -->
-    <section class="section" id="sec-regulation">
-      <div class="section-header">
-        <div class="section-icon" style="background:#f0fdf4;color:var(--c-reg)">📜</div>
+    <!-- ════ 글로벌 리콜 ════ -->
+    <section class="section" id="sec-recall_global" style="--sec-c:var(--c-gl)">
+      <div class="section-header" onclick="toggleSec('recall_global')">
+        <div class="section-icon">🌍</div>
+        <div class="section-title" style="color:var(--c-gl)">글로벌 리콜</div>
+        <span class="section-badge" style="background:var(--c-gl)">0건</span>
+        <span class="sec-toggle open" id="tgl-recall_global">▼</span>
+      </div>
+      <div id="body-recall_global">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">오늘은 수집된 글로벌 리콜 정보가 없습니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ 자동차 산업 동향 뉴스 ════ -->
+    <section class="section" id="sec-news" style="--sec-c:var(--c-news)">
+      <div class="section-header" onclick="toggleSec('news')">
+        <div class="section-icon">📰</div>
+        <div class="section-title" style="color:var(--c-news)">자동차 산업 동향 뉴스</div>
+        <span class="section-badge" style="background:var(--c-news)">13건</span>
+        <span class="sec-toggle open" id="tgl-news">▼</span>
+      </div>
+      <div id="body-news">
+        <div class="cards-list">
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-06 05:45</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60351" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">BMW, 전기차 누적 생산 200만대 돌파... 2013년 i3 이후 13년만</a>
+            <p class="card-summary">BMW 그룹의 200만 번째 순수 전기차인 i5 M60 xDrive 세단과 생산 직원들이 기념 촬영을 하고 있다. BMW가 글로벌 누적 순수 전기차(BEV) 생산 200만 대를 돌파했다. 200만 번째 전기차는 독일 딩골핑 공장에서 생산된 BMW i5 M60 xDrive 세단이다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 16:14</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60336" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">완성차 4월 실적 전년비 3.4% 감소... 기아 내수 28년만 현대차 추월</a>
+            <p class="card-summary">지난달 국내 완성차 5개사의 글로벌 판매는 업체별 희비가 크게 엇갈린 가운데 전체적으로는 감소세로 전환됐다. 현대자동차의 실적 둔화가 전체 흐름을 끌어내린 반면 기아와 GM 한국사업장, KG모빌리티는 증가세를 유지하며 선전했다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 14:38</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60348" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">세계가 주목한 베이징 모터쇼 '10일간 128만 명' 역대 최대 기록</a>
+            <p class="card-summary">현지시간 지난 3일 폐막한 '2026 오토 차이나'는 10일간 총 128만 명의 관람객이 방문한 것으로 나타났다. 전동화와 지능화 기술을 중심으로 글로벌 자동차 산업의 무게 중심이 이동하는 가운데 이번 모터쇼는 중국 자동차 산업의 위상 변화를 상징적으로 보여줬다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 13:55</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60346" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">40억 원대 BYD 전기차 "이게 팔릴까 했지만" 모터쇼 현장에서 계약</a>
+            <p class="card-summary">BYD 양왕 U9 익스트림이 '2026 오토 차이나'에서 대당 2000만 위안(약 43억 원) 이상에 판매됐다. BYD가 고급 전기차 브랜드 양왕(Yangwang)을 통해 선보인 전기 하이퍼카 'U9 익스트림'이 전시장 현장 계약으로 이어지며 화제를 모았다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+        </div>
+
+        <!-- 5건 초과분 (기본 접힘) -->
+        <div class="cards-extra" id="extra-news">
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 13:12</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60345" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">100억 마일 달린 테슬라 FSD...지구 400만 바퀴, 완전 자율주행은 어디쯤?</a>
+            <p class="card-summary">테슬라 주행보조 시스템 FSD(Full Self-Driving)가 누적 주행거리 100억 마일(약 160억 km)을 돌파했다. CEO 일론 머스크가 '완전 자율주행' 구현을 위한 기준으로 제시했던 수치에 도달했으나, 완전 자율주행의 실현 시점은 여전히 불투명하다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 11:55</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60333" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">[김흥식 칼럼] 경찰도 헷갈리는 '우회전' 일본의 단순 명료한 신호 체계</a>
+            <p class="card-summary">우회전 차량에 대한 단속을 강화한 이후 억울함을 호소하는 운전자들이 늘고 있다. 우회전 표시등 녹색 신호에 맞춰 진행했다가 단속된 사례가 속출하며, 일본의 단순 명료한 신호 체계와 비교하는 논의가 이어지고 있다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 10:58</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60344" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">[EV 트렌드] BYD, 1분기 순이익 55% 급감 '가격 경쟁 직격탄'</a>
+            <p class="card-summary">중국 BYD가 2026년 1분기 실적에서 큰 폭의 이익 감소를 기록했다. BYD의 1분기 순이익은 약 40억 위안(약 8600억 원)으로 전년 동기 대비 55% 급감, 판매 확대에도 불구하고 수익성이 악화되며 가격 경쟁 압박을 그대로 드러냈다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 10:34</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60343" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">[모빌리티 인사이트] 전기차 시대에도 '관세 전쟁' 車 산업 변수로</a>
+            <p class="card-summary">도널드 트럼프 미국 대통령이 유럽산 자동차에 대한 관세를 기존 15%에서 25%로 인상하겠다고 밝히면서 글로벌 자동차 산업이 다시 통상 리스크 중심으로 이동하고 있다. EU가 기존 무역 합의를 충족하지 못했다는 판단이 배경이다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 09:31</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60341" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">렉서스, 3열 전기 SUV 'TZ' 공개 임박…전동화 플래그십 등장</a>
+            <p class="card-summary">렉서스가 브랜드 전동화 전략의 핵심 모델로 꼽히는 대형 전기 SUV 'TZ' 공개를 예고했다. 3열 구조를 갖춘 순수 전기 SUV로, 기존 TX를 대체하는 전동화 플래그십 역할이 예상되며 오는 7일 공개될 예정이다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 09:20</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60339" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">한국타이어 '아이온', 유럽 EV 시장 공략 가속…풀라인업 경쟁력 부각</a>
+            <p class="card-summary">한국타이어가 유럽 전기차 시장 공략에 속도를 높인다. 전기차 전용 타이어 브랜드 '아이온(iON)'을 앞세워 영국 주요 전시회를 무대로 글로벌 프리미엄 브랜드 위상 강화에 나선다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 09:09</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60338" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">현대 N 페스티벌 2026 시즌 개막, 나이트·내구 레이스 도입 격전 예고</a>
+            <p class="card-summary">현대차가 국내 최대 규모 원메이크 레이싱 대회인 '2026 현대 N 페스티벌'의 막을 올린다. 5월 8일부터 10일까지 용인 에버랜드 스피드웨이에서 열리는 1라운드를 시작으로, 올해는 나이트 레이스와 내구 레이스가 새롭게 도입된다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 09:05</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60335" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">'선택지 확대한 4개 트림 출시' 토요타, RAV4로 SUV 시장 공략</a>
+            <p class="card-summary">토요타코리아가 '올 뉴 RAV4(ALL-NEW RAV4)'를 다음달 16일 국내 출시한다. 5월 4일부터 전국 토요타 공식 딜러 전시장에서 사전계약을 실시하며, 4개 트림으로 소비자 선택 폭을 넓혔다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+          <div class="card">
+            <div class="card-meta"><span class="card-date">2026-05-04 08:36</span><span class="card-source">오토헤럴드</span></div>
+            <a href="http://www.autoherald.co.kr/news/articleView.html?idxno=60332" class="card-title" style="color:var(--c-news)" target="_blank" rel="noopener noreferrer">'전략과 수요 간 괴리' 잘 팔리는데 단종, 포르쉐 마칸 생산 종료</a>
+            <p class="card-summary">포르쉐가 브랜드 핵심 볼륨 모델인 '마칸(Macan)' 내연기관 모델의 생산을 2026년 여름 종료한다. 전동화 전략에 따른 결정이지만, 시장 수요가 여전히 높은 상황에서의 단종이라 전략과 수요 간 간극이 드러나는 사례로 평가된다.</p>
+            <button class="more-btn" style="color:var(--c-news)" onclick="toggleMore(this)">더보기 ▾</button>
+          </div>
+
+        </div><!-- /extra -->
+
+        <button class="expand-bar" id="expbar-news" onclick="toggleExtra('news',9)" style="color:var(--c-news)">
+          ▾ &nbsp;나머지 <strong id="expcount-news">9</strong>건 더 보기
+        </button>
+      </div>
+    </section>
+
+    <!-- ════ 법규·규제 ════ -->
+    <section class="section" id="sec-regulation" style="--sec-c:var(--c-reg)">
+      <div class="section-header" onclick="toggleSec('regulation')">
+        <div class="section-icon">⚖️</div>
         <div class="section-title" style="color:var(--c-reg)">법규·규제</div>
         <span class="section-badge" style="background:var(--c-reg)">0건</span>
+        <span class="sec-toggle open" id="tgl-regulation">▼</span>
       </div>
-      <div class="empty-state">
-        <div class="empty-icon">📭</div>
-        <div class="empty-text">오늘은 수집된 법규·규제 뉴스가 없습니다.</div>
+      <div id="body-regulation">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">오늘은 수집된 법규·규제 뉴스가 없습니다.</div>
+        </div>
       </div>
     </section>
 
   </main>
 
-  <footer>자동차 산업동향 브리핑 &nbsp;·&nbsp; 2026년 05월 06일 &nbsp;·&nbsp; 자동 수집된 공개 뉴스입니다</footer>
+  <footer>
+    <strong>HL Mando CQO &nbsp;·&nbsp; Quality Planning</strong><br>
+    <span style="font-size:11px;margin-top:4px;display:inline-block">
+      자동차 산업동향 브리핑 <span class="ft-div">|</span> 2026년 05월 06일 <span class="ft-div">|</span> 자동 수집된 공개 뉴스입니다
+    </span>
+  </footer>
 </div>
 
-<!-- Scroll to top -->
 <button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="맨 위로">↑</button>
 
 <script>
@@ -612,8 +583,30 @@ function show() {
 }
 
 document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") checkPw(); });
-
 if (sessionStorage.getItem("auth") === H) show();
+
+/* 섹션 전체 접기/펼치기 */
+function toggleSec(id) {
+  const body = document.getElementById("body-" + id);
+  const tgl  = document.getElementById("tgl-" + id);
+  const isOpen = tgl.classList.contains("open");
+  body.style.display = isOpen ? "none" : "";
+  tgl.classList.toggle("open", !isOpen);
+  tgl.textContent = isOpen ? "▶" : "▼";
+}
+
+/* 5건 초과분 펼치기/접기 */
+function toggleExtra(id, total) {
+  const extra = document.getElementById("extra-" + id);
+  const bar   = document.getElementById("expbar-" + id);
+  const cnt   = document.getElementById("expcount-" + id);
+  const isOpen = extra.classList.toggle("open");
+  if (isOpen) {
+    bar.innerHTML = '▴ &nbsp;접기';
+  } else {
+    bar.innerHTML = '▾ &nbsp;나머지 <strong id="expcount-' + id + '">' + total + '</strong>건 더 보기';
+  }
+}
 
 /* 요약 더보기/접기 */
 function toggleMore(btn) {
@@ -631,7 +624,7 @@ document.querySelectorAll(".card-summary").forEach(el => {
   }
 });
 
-/* Scroll-to-top */
+/* 스크롤 맨위로 버튼 */
 const scrollBtn = document.getElementById("scrollTop");
 window.addEventListener("scroll", () => {
   scrollBtn.classList.toggle("visible", window.scrollY > 400);
