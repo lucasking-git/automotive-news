@@ -11,10 +11,10 @@ _STAT_RE = re.compile(
     r'합계 ([\d,]+)건/([\d,]+)대'
 )
 
-# 국기는 flagcdn.com img 태그 사용 (Linux 서버에서 국기 이모지 미지원 문제 해결)
+# 국기는 flagcdn.com SVG 사용 (PNG 대비 고해상도, Linux 서버 이모지 미지원 문제 해결)
 _FLAG_IMG = {
-    "recall_kr": '<img src="https://flagcdn.com/20x15/kr.png" alt="KR" class="flag-img">',
-    "recall_us": '<img src="https://flagcdn.com/20x15/us.png" alt="US" class="flag-img">',
+    "recall_kr": '<img src="https://flagcdn.com/kr.svg" alt="KR" class="flag-img">',
+    "recall_us": '<img src="https://flagcdn.com/us.svg" alt="US" class="flag-img">',
 }
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
