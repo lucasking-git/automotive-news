@@ -123,7 +123,8 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .cards-extra.open{display:block}
 .expand-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 22px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;border-top:1px solid var(--border);transition:background .15s}
 .expand-bar:hover{background:#f0f8fd}
-.date-expand-bar{font-size:12px;padding:7px 22px 10px;background:#f7fbff;border-top:1px dashed var(--border);margin-bottom:2px}
+.date-expand-bar{width:fit-content;margin:8px auto 12px;padding:7px 26px;font-size:12.5px;font-weight:700;background:#f0f8fd;border:1.5px solid currentColor;border-radius:20px;border-top:1.5px solid currentColor;transition:background .15s,box-shadow .15s}
+.date-expand-bar:hover{background:#dbeafe;box-shadow:0 2px 10px rgba(0,102,178,.15)}
 
 /* Empty */
 .empty-state{padding:44px 24px;text-align:center}
