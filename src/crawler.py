@@ -235,7 +235,7 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
 
 
 def collect_all_news() -> dict[str, list[dict]]:
-    result: dict[str, list[dict]] = {cat: [] for cat in ["recall_kr", "recall_us", "oem", "regulation"]}
+    result: dict[str, list[dict]] = {cat: [] for cat in ["recall_kr", "recall_us", "recall_global", "news", "regulation"]}
     max_days = NEWS_MAX_AGE_DAYS
 
     print("뉴스 수집 시작...")
@@ -252,7 +252,7 @@ def collect_all_news() -> dict[str, list[dict]]:
         elif any(k in t for k in reg_kw):
             result["regulation"].append({**a, "category": "regulation"})
         else:
-            result["oem"].append({**a, "category": "oem"})
+            result["news"].append({**a, "category": "news"})
     print(f"  [오토헤럴드] {len(ah_articles)}건")
 
     # 2. 네이버 뉴스

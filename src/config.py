@@ -1,25 +1,36 @@
 NEWS_MAX_AGE_DAYS = 2
 
-# 사이트 접근 비밀번호 (변경 가능)
+# 사이트 접근 비밀번호
 SITE_PASSWORD = "HL2025"
 
 CATEGORY_LABELS = {
-    "recall_kr":  "국내 리콜·결함",
-    "recall_us":  "미국·글로벌 리콜",
-    "oem":        "OEM 동향",
-    "regulation": "법규·규제",
+    "recall_kr":     "국내 리콜·결함",
+    "recall_us":     "미국 리콜",
+    "recall_global": "글로벌 리콜",
+    "news":          "자동차 산업 동향 뉴스",
+    "regulation":    "법규·규제",
 }
 
 CATEGORY_COLORS = {
-    "recall_kr":  "#ef4444",
-    "recall_us":  "#f97316",
-    "oem":        "#3b82f6",
-    "regulation": "#22c55e",
+    "recall_kr":     "#00ADE9",
+    "recall_us":     "#0055A4",
+    "recall_global": "#5B9BD5",
+    "news":          "#0099CC",
+    "regulation":    "#00A896",
+}
+
+CATEGORY_ICONS = {
+    "recall_kr":     "🇰🇷",
+    "recall_us":     "🇺🇸",
+    "recall_global": "🌍",
+    "news":          "📰",
+    "regulation":    "⚖️",
 }
 
 NAVER_QUERIES = {
-    "recall_kr":  ["자동차 리콜 국토교통부", "자동차 결함 리콜"],
-    "recall_us":  ["NHTSA recall 자동차", "미국 자동차 리콜"],
-    "oem":        ["현대차 품질 기아 품질", "자동차 OEM 협력사"],
-    "regulation": ["자동차 법규 안전기준 국토부", "자동차 배출가스 규제"],
+    "recall_kr":     ["자동차 리콜 국토교통부", "자동차 결함 리콜"],
+    "recall_us":     ["NHTSA recall 자동차", "미국 자동차 리콜"],
+    "recall_global": ["유럽 자동차 리콜", "글로벌 자동차 결함"],
+    "news":          ["현대차 기아 자동차 산업동향", "자동차 전기차 모빌리티 뉴스"],
+    "regulation":    ["자동차 법규 안전기준 국토부", "자동차 배출가스 규제"],
 }
