@@ -100,6 +100,7 @@ main{max-width:1000px;margin:28px auto;padding:0 20px 72px}
 .card-meta{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap}
 .card-date{display:inline-flex;align-items:center;font-size:11px;color:var(--text-3);background:#f0f8fd;border-radius:4px;padding:2px 8px}
 .card-source{font-size:11px;color:#94a3b8;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:2px 8px}
+.card-source-official{font-size:11px;font-weight:700;color:#0d7c66;background:#e8f5f0;border:1px solid #b2dfdb;border-radius:4px;padding:2px 8px}
 .card-title{font-size:14px;font-weight:600;line-height:1.55;text-decoration:none;display:block;transition:opacity .15s}
 .card-title:hover{text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
 .card-summary{font-size:12.5px;color:var(--text-2);line-height:1.7;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -219,23 +220,26 @@ def _escape(text: str) -> str:
     return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def _get_source(article: dict) -> str:
+_OFFICIAL_SOURCES = {"nhtsa.gov", "car.go.kr", "molit.go.kr", "korea.kr"}
+
+def _get_source(article: dict) -> tuple[str, bool]:
+    """(출처명, 공식여부) 반환."""
     link = article.get("link") or ""
     if "nhtsa.gov" in link:
-        return "NHTSA (nhtsa.gov)"
+        return "NHTSA (nhtsa.gov)", True
     if "car.go.kr" in link:
-        return "자동차리콜센터 (car.go.kr)"
-    if "autoherald.co.kr" in link:
-        return "오토헤럴드"
+        return "자동차리콜센터 (car.go.kr)", True
     if "molit.go.kr" in link or "korea.kr" in link:
-        return "국토교통부"
+        return "국토교통부", True
+    if "autoherald.co.kr" in link:
+        return "오토헤럴드 (참고)", False
     if "kama.or.kr" in link:
-        return "자동차산업협회"
+        return "자동차산업협회", False
     if "motorgraph.com" in link:
-        return "모터그래프"
+        return "모터그래프", False
     if "autodaily.co.kr" in link:
-        return "오토데일리"
-    return ""
+        return "오토데일리", False
+    return "", False
 
 
 def _extract_date(pub: str) -> str:
@@ -276,7 +280,7 @@ def _cargokr_stat_html(article: dict, color: str) -> str:
         f'<div class="recall-stat-card">'
         f'<div class="card-meta">'
         f'<span class="card-date">{year}-{month}</span>'
-        f'<span class="card-source">자동차리콜센터 (car.go.kr)</span>'
+        f'<span class="card-source-official">자동차리콜센터 (car.go.kr)</span>'
         f'</div>'
         f'<div class="recall-stat-title" style="color:{color}">{year}년 {month}월 리콜 현황</div>'
         f'<div class="recall-stat-grid">'
@@ -301,9 +305,10 @@ def _card_html(article: dict, color: str) -> str:
     link    = _escape(article.get("link") or "#")
     pub     = _escape(article.get("published") or "")
     summary = _escape(article.get("summary") or "")
-    source  = _get_source(article)
+    source, is_official = _get_source(article)
 
-    source_tag = f'<span class="card-source">{_escape(source)}</span>' if source else ""
+    src_cls    = "card-source-official" if is_official else "card-source"
+    source_tag = f'<span class="{src_cls}">{_escape(source)}</span>' if source else ""
     summary_block = (
         f'<p class="card-summary">{summary}</p>'
         f'<button class="more-btn" style="color:{color}" onclick="toggleMore(this)">더보기 ▾</button>'

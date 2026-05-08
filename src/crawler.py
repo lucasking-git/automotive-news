@@ -402,12 +402,16 @@ def collect_all_news() -> dict[str, list[dict]]:
 
     print("뉴스 수집 시작...")
 
-    # 1. 오토헤럴드 RSS — 모든 기사는 news/regulation으로만 분류 (recall_kr 제외)
+    # 1. 오토헤럴드 RSS — 리콜 기사는 recall_kr(참고), 법규는 regulation, 나머지는 news
     print("  [오토헤럴드] RSS 수집 중...")
     ah_articles = fetch_rss("news", "https://www.autoherald.co.kr/rss/allArticle.xml", max_days)
-    reg_kw = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
+    recall_kw = ["리콜", "결함", "시정조치"]
+    reg_kw    = ["법규", "규제", "기준", "인증", "환경부", "국토부", "배출"]
     for a in ah_articles:
-        if any(k in a["title"] for k in reg_kw):
+        t = a["title"]
+        if any(k in t for k in recall_kw):
+            result["recall_kr"].append({**a, "category": "recall_kr"})
+        elif any(k in t for k in reg_kw):
             result["regulation"].append({**a, "category": "regulation"})
         else:
             result["news"].append({**a, "category": "news"})
