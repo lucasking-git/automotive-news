@@ -297,6 +297,8 @@ def _get_source(article: dict) -> tuple[str, bool]:
         return "자동차리콜센터 (car.go.kr)", True
     if "molit.go.kr" in link or "korea.kr" in link:
         return "국토교통부", True
+    if "autowein.com" in link:
+        return "아우토바인 (autowein.com)", False
     if "autoherald.co.kr" in link:
         return "오토헤럴드", False
     if "kama.or.kr" in link:

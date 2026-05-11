@@ -394,6 +394,77 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
     return results
 
 
+_MOLIT_RECALL_KW = ["리콜", "시정조치", "결함", "자발적 시정"]
+_MOLIT_AUTO_KW   = [
+    "자동차", "모빌리티", "자율주행", "전기차", "수소차", "친환경차",
+    "교통안전", "차량", "리콜", "시정조치",
+]
+
+
+def fetch_autowein_news(max_days: int) -> list[dict]:
+    """아우토바인(autowein.com) RSS - 글로벌 자동차 산업동향."""
+    return fetch_rss("news", "https://autowein.com/feed/", max_days)
+
+
+def fetch_molit_press_releases(max_days: int = 7) -> list[dict]:
+    """정책브리핑(korea.kr) 경유 국토교통부 보도자료 수집 (모빌리티·자동차 키워드 필터링)."""
+    articles = []
+    kst = timezone(timedelta(hours=9))
+    cutoff = datetime.now(kst) - timedelta(days=max_days)
+    try:
+        resp = SESSION.get(
+            "https://www.korea.kr/briefing/pressReleaseList.do",
+            params={"repCode": "A00006", "pageIndex": 1},
+            timeout=15,
+        )
+        soup = BeautifulSoup(resp.text, "lxml")
+        for item in soup.select("div.list_type ul li"):
+            link_tag = item.find("a", href=lambda h: h and "pressReleaseView" in h)
+            if not link_tag:
+                continue
+            strong = link_tag.find("strong")
+            if not strong:
+                continue
+            title = strong.get_text(strip=True)
+
+            # 자동차·모빌리티 관련 기사만 수집
+            if not any(k in title for k in _MOLIT_AUTO_KW):
+                continue
+
+            href = link_tag.get("href", "")
+            link = ("https://www.korea.kr" + href) if href.startswith("/") else href
+
+            # 날짜 추출 (YYYY-MM-DD 형식 span/em/p 탐색)
+            pub_str = ""
+            for tag in item.find_all(["span", "em", "p"]):
+                m = re.match(r"(\d{4}-\d{2}-\d{2})", tag.get_text(strip=True))
+                if m:
+                    pub_str = m.group(1)
+                    try:
+                        y, mo, d = pub_str.split("-")
+                        pub_dt = datetime(int(y), int(mo), int(d), tzinfo=kst)
+                        if pub_dt < cutoff:
+                            pub_str = ""
+                    except ValueError:
+                        pub_str = ""
+                    break
+
+            if not pub_str:
+                continue
+
+            cat = "recall_kr" if any(k in title for k in _MOLIT_RECALL_KW) else "regulation"
+            articles.append({
+                "title":     f"[국토부] {title}",
+                "summary":   "",
+                "link":      link,
+                "published": pub_str,
+                "category":  cat,
+            })
+    except Exception as ex:
+        print(f"  [경고] 국토부 보도자료 수집 실패: {ex}")
+    return articles
+
+
 def collect_all_news() -> dict[str, list[dict]]:
     result: dict[str, list[dict]] = {
         cat: [] for cat in ["recall_kr", "recall_us", "recall_global", "news", "regulation"]
@@ -453,6 +524,26 @@ def collect_all_news() -> dict[str, list[dict]]:
         if a["title"] not in existing:
             result["recall_us"].append(a)
     print(f"  [NHTSA] {len(nhtsa)}건")
+
+    # 5. 아우토바인 RSS
+    print("  [아우토바인] RSS 수집 중...")
+    autowein = fetch_autowein_news(max_days)
+    existing = {a["title"] for a in result["news"]}
+    for a in autowein:
+        if a["title"] not in existing:
+            result["news"].append(a)
+            existing.add(a["title"])
+    print(f"  [아우토바인] {len(autowein)}건")
+
+    # 6. 국토교통부 모빌리티·자동차 보도자료
+    print("  [국토부] 보도자료 수집 중...")
+    molit = fetch_molit_press_releases(max(max_days, 7))
+    for a in molit:
+        cat = a["category"]
+        existing_cat = {x["title"] for x in result[cat]}
+        if a["title"] not in existing_cat:
+            result[cat].append(a)
+    print(f"  [국토부] {len(molit)}건")
 
     total = sum(len(v) for v in result.values())
     print(f"총 {total}건 수집 완료")
