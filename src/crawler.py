@@ -128,162 +128,90 @@ def fetch_naver_news(category: str, queries: list[str], max_days: int) -> list[d
 
 
 def fetch_cargokr_individual_recalls(max_days: int = 60) -> list[dict]:
-    """car.go.kr 개별 리콜 공고 수집 (건별 상세정보)."""
+    """car.go.kr 리콜현황(/ri/stat/list.do) 개별 리콜 건별 수집."""
     articles = []
     kst = timezone(timedelta(hours=9))
     cutoff = datetime.now(kst) - timedelta(days=max_days)
+    base = "https://www.car.go.kr"
+    list_url = f"{base}/ri/stat/list.do"
+    seen: set[str] = set()
 
-    # ── 방법 1: JSON API 시도 (여러 엔드포인트) ──────────────────────────
-    api_attempts = [
-        {
-            "url": "https://www.car.go.kr/rs/recalls/rcAll.do",
-            "data": {"pageIndex": "1", "recordCountPerPage": "30", "searchFlag": "R"},
-        },
-        {
-            "url": "https://www.car.go.kr/rs/recalls/rcList.do",
-            "data": {"pageIndex": "1", "recordCountPerPage": "30"},
-        },
-        {
-            "url": "https://www.car.go.kr/rs/recalls/getRecallList.do",
-            "data": {"pageIndex": "1", "recordCountPerPage": "30"},
-        },
-    ]
+    def _parse_page(soup) -> bool:
+        """li 목록 파싱. 기간 초과 항목이 나오면 False 반환."""
+        items = soup.select("ul.board-hrznt-list > li")
+        if not items:
+            return False
+        for item in items:
+            a_tag = item.select_one("a[onclick]")
+            if not a_tag:
+                continue
+            m = re.search(r"detailView\('(\w+)'", a_tag.get("onclick", ""))
+            if not m:
+                continue
+            recall_id = m.group(1)
+            if recall_id in seen:
+                continue
 
-    for attempt in api_attempts:
-        try:
-            resp = SESSION.post(attempt["url"], data=attempt["data"], timeout=10)
+            strong = item.select_one("strong")
+            title = strong.get_text(strip=True) if strong else ""
+            if not title:
+                continue
+
+            # 날짜 추출 (YYYY-MM-DD 형식 meta li에서)
+            pub_str = ""
+            for li in item.select("ul li"):
+                dm = re.match(r"(\d{4}-\d{2}-\d{2})", li.get_text(strip=True))
+                if dm:
+                    pub_str = dm.group(1)
+                    break
+            if not pub_str:
+                continue
+
+            # 날짜 기준 컷오프
+            try:
+                y, mo, d = pub_str.split("-")
+                pub_dt = datetime(int(y), int(mo), int(d), tzinfo=kst)
+                if pub_dt < cutoff:
+                    return False  # 이후 페이지는 더 오래된 항목 → 중단
+            except ValueError:
+                continue
+
+            seen.add(recall_id)
+            link = f"{base}/ri/stat/detail.do?recallId={recall_id}&ctype=O"
+            articles.append({
+                "title":     title,
+                "summary":   "",
+                "link":      link,
+                "published": pub_str,
+                "category":  "recall_kr",
+            })
+        return True
+
+    try:
+        # 1페이지 (GET)
+        resp = SESSION.get(list_url, timeout=12)
+        if resp.status_code != 200:
+            raise ValueError(f"HTTP {resp.status_code}")
+        soup = BeautifulSoup(resp.text, "lxml")
+        keep_going = _parse_page(soup)
+
+        # 2~6페이지 (POST 페이지네이션, 기간 내 항목이 있는 동안)
+        for page in range(2, 7):
+            if not keep_going:
+                break
+            resp = SESSION.post(list_url, data={"currentPageNo": str(page)}, timeout=12)
             if resp.status_code != 200:
-                continue
-            result = resp.json()
-            items = (
-                result.get("list") or result.get("rcList") or
-                result.get("resultList") or result.get("data") or []
-            )
-            if not items:
-                continue
-
-            for item in items[:25]:
-                oem   = (item.get("mfgNm") or item.get("mfgCdNm") or
-                         item.get("manufNm") or item.get("mfrNm") or "").strip()
-                model = (item.get("carNm") or item.get("modNm") or
-                         item.get("modelNm") or item.get("carModelNm") or "").strip()
-                years = (item.get("prodPeriod") or item.get("mfgYr") or
-                         item.get("prodYr") or "").strip()
-                defect = (item.get("dfctCtn") or item.get("dfctNm") or
-                          item.get("dfctDesc") or item.get("dfctCd") or "").strip()
-                remedy = (item.get("repairMth") or item.get("repairNm") or
-                          item.get("repairDesc") or "").strip()
-                count_raw = (item.get("rcllCnt") or item.get("recallCnt") or
-                             item.get("cnt") or item.get("carCnt") or 0)
-                date_str  = (item.get("rcptDt") or item.get("insDt") or
-                             item.get("rcllDt") or item.get("regDt") or "").strip()
-                recall_no = (item.get("rcllReqNo") or item.get("rcllNo") or
-                             item.get("seqNo") or "").strip()
-
-                if not oem and not model:
-                    continue
-
-                # 날짜 파싱
-                pub_str = ""
-                for fmt in ("%Y%m%d", "%Y-%m-%d", "%Y.%m.%d"):
-                    try:
-                        d = datetime.strptime(date_str[:len(fmt.replace("%Y","0000").replace("%m","00").replace("%d","00"))], fmt)
-                        pub_dt = d.replace(tzinfo=kst)
-                        if pub_dt < cutoff:
-                            break
-                        pub_str = d.strftime("%Y-%m-%d")
-                        break
-                    except Exception:
-                        continue
-
-                try:
-                    count_int = int(str(count_raw).replace(",", ""))
-                    count_fmt = f"{count_int:,}"
-                except Exception:
-                    count_fmt = str(count_raw)
-
-                title = f"[국내 리콜] {oem} {model}"
-                if years:
-                    title += f" ({years}년형)"
-
-                summary_parts = []
-                if defect:
-                    summary_parts.append(f"결함: {defect[:120]}")
-                if count_fmt and count_fmt != "0":
-                    summary_parts.append(f"대상 {count_fmt}대")
-                if remedy:
-                    summary_parts.append(f"조치: {remedy[:60]}")
-
-                link = (
-                    f"https://www.car.go.kr/ri/recall/view.do?rcllReqNo={recall_no}"
-                    if recall_no else "https://www.car.go.kr/ri/recall/list.do"
-                )
-
-                articles.append({
-                    "title":     title,
-                    "summary":   " | ".join(summary_parts),
-                    "link":      link,
-                    "published": pub_str,
-                    "category":  "recall_kr",
-                })
-
-            if articles:
-                print(f"  [car.go.kr] JSON API 성공: {len(articles)}건")
-                return articles
-        except Exception:
-            continue
-
-    # ── 방법 2: HTML 리콜 공고 목록 스크래핑 ────────────────────────────
-    scrape_urls = [
-        "https://www.car.go.kr/ri/recall/list.do",
-        "https://www.car.go.kr/home/main.do",
-    ]
-    for url in scrape_urls:
-        try:
-            resp = SESSION.get(url, timeout=10)
+                break
             soup = BeautifulSoup(resp.text, "lxml")
+            keep_going = _parse_page(soup)
 
-            for row in soup.select("table tbody tr")[:20]:
-                cols = row.select("td")
-                if len(cols) < 3:
-                    continue
-                link_tag = None
-                for col in cols:
-                    link_tag = col.select_one("a")
-                    if link_tag:
-                        break
-                if not link_tag:
-                    continue
+        if articles:
+            print(f"  [car.go.kr] 개별 리콜 {len(articles)}건 수집")
+        else:
+            print("  [car.go.kr] 기간 내 개별 리콜 없음 - 통계 방식으로 전환")
+    except Exception as ex:
+        print(f"  [car.go.kr] 개별 리콜 수집 실패: {ex}")
 
-                raw_title = link_tag.get_text(strip=True)
-                href = link_tag.get("href", "")
-                link = ("https://www.car.go.kr" + href) if href.startswith("/") else (href or "https://www.car.go.kr/ri/recall/list.do")
-                date_text = cols[-1].get_text(strip=True) if cols else ""
-
-                # 날짜 파싱
-                pub_str = ""
-                for fmt in ("%Y.%m.%d", "%Y-%m-%d", "%Y/%m/%d"):
-                    try:
-                        pub_str = datetime.strptime(date_text[:10], fmt).strftime("%Y-%m-%d")
-                        break
-                    except Exception:
-                        continue
-
-                articles.append({
-                    "title":     f"[국내 리콜] {raw_title}",
-                    "summary":   "",
-                    "link":      link,
-                    "published": pub_str or date_text,
-                    "category":  "recall_kr",
-                })
-
-            if articles:
-                print(f"  [car.go.kr] HTML 스크래핑 성공: {len(articles)}건")
-                return articles
-        except Exception as ex:
-            print(f"  [car.go.kr] 스크래핑 실패 ({url}): {ex}")
-
-    print("  [car.go.kr] 개별 리콜 수집 실패 - 통계 방식으로 전환")
     return articles
 
 
@@ -467,7 +395,7 @@ def fetch_molit_press_releases(max_days: int = 7) -> list[dict]:
 
 def collect_all_news() -> dict[str, list[dict]]:
     result: dict[str, list[dict]] = {
-        cat: [] for cat in ["recall_kr", "recall_us", "recall_global", "news", "regulation"]
+        cat: [] for cat in ["recall_kr", "recall_us", "news", "regulation"]
     }
     max_days = NEWS_MAX_AGE_DAYS
 
@@ -489,6 +417,8 @@ def collect_all_news() -> dict[str, list[dict]]:
     print("  [네이버] 검색 수집 중...")
     for category, queries in NAVER_QUERIES.items():
         actual_cat = "news" if category == "recall_kr" else category
+        if actual_cat not in result:
+            continue
         naver_articles = fetch_naver_news(category, queries, max_days)
         existing = {a["title"] for a in result[actual_cat]}
         for a in naver_articles:
