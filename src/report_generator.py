@@ -90,8 +90,41 @@ nav::-webkit-scrollbar{display:none}
 .nav-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8f4fd;color:var(--text-3);transition:background .15s,color .15s}
 .flag-img{width:20px;height:15px;border-radius:2px;vertical-align:middle;object-fit:cover}
 
-/* Main content */
-main{max-width:1000px;margin:24px auto;padding:0 20px 72px}
+/* ── Desktop 2-column layout ──────────────────────────────────── */
+.app-layout{display:flex;align-items:flex-start;max-width:1600px;margin:0 auto;background:var(--bg);min-height:calc(100vh - var(--header-h,80px))}
+
+/* Sidebar */
+.sidebar{width:230px;flex-shrink:0;position:sticky;top:var(--header-h,80px);height:calc(100vh - var(--header-h,80px));overflow-y:auto;background:var(--surface);border-right:1.5px solid #dbeafe;display:flex;flex-direction:column}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:#93c5fd;border-radius:2px}
+.sidebar-top{padding:20px 20px 14px;border-bottom:1px solid #eef2f7;flex-shrink:0}
+.sidebar-brand{font-size:13px;font-weight:800;color:var(--brand-dk);letter-spacing:-.3px;line-height:1.35}
+.sidebar-date{font-size:11px;color:var(--text-3);margin-top:3px}
+.sidebar-nav{padding:10px 0 16px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:9px;padding:11px 18px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;border-left:3px solid transparent;transition:all .15s}
+.sidebar-link:hover{background:#f0f8fd;border-left-color:var(--c);color:var(--c)}
+.sidebar-link.active{background:#e8f4fd;border-left-color:var(--c);color:var(--c);font-weight:700}
+.sidebar-link.nav-empty{opacity:.35}
+.sidebar-icon{display:flex;align-items:center;width:22px;flex-shrink:0;font-size:15px}
+.sidebar-icon .flag-img{width:18px;height:14px;border-radius:2px}
+.sidebar-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-count{font-size:11px;font-weight:700;padding:2px 7px;border-radius:12px;background:#e8f4fd;color:var(--text-3);flex-shrink:0;transition:all .15s}
+.sidebar-link.active .sidebar-count,.sidebar-link:hover .sidebar-count{background:rgba(0,173,233,.15);color:var(--c)}
+.sidebar-footer{padding:14px 18px;border-top:1px solid #eef2f7;font-size:11px;color:var(--text-3);flex-shrink:0}
+
+/* Main content area */
+.main-content{flex:1;min-width:0;padding:24px 32px 72px}
+
+/* Desktop: top-nav 숨김 */
+@media(min-width:900px){.sticky-wrap nav{display:none!important}}
+
+/* Mobile: sidebar 숨김, top-nav 표시 */
+@media(max-width:899px){
+  .sidebar{display:none!important}
+  .app-layout{display:block;max-width:none}
+  .main-content{padding:16px 12px 72px}
+  .sticky-wrap nav{display:block!important}
+}
 
 /* Section */
 .section{background:var(--surface);border-radius:var(--r);margin-bottom:20px;box-shadow:var(--sh);overflow:hidden;transition:box-shadow .2s,opacity .2s;border-left:4px solid var(--sec-c,#00ADE9)}
@@ -171,7 +204,7 @@ footer strong{color:rgba(255,255,255,.75)}
   .gate-card{padding:36px 24px}
   .header-inner{gap:10px}
   .header-icon{width:38px;height:38px;font-size:18px}
-  main{padding:0 12px 72px}
+  .main-content{padding:0 12px 72px}
   .section-header{padding:14px 16px 12px}
   .card{padding:14px 16px 16px}
 }
@@ -260,12 +293,21 @@ function initMain() {{
     }});
   }});
 
+  // 헤더 높이 → CSS 변수 (사이드바 sticky top 위치 계산)
+  function updateHeaderH() {{
+    const sw = document.querySelector(".sticky-wrap");
+    if (sw) document.documentElement.style.setProperty("--header-h", sw.offsetHeight + "px");
+  }}
+  window.addEventListener("resize", updateHeaderH, {{passive: true}});
+  updateHeaderH();
+
   const allSecs  = document.querySelectorAll(".section");
-  const navLinks = document.querySelectorAll(".nav-link");
+  const navLinks = document.querySelectorAll(".nav-link, .sidebar-link");
   function updateNav() {{
     let cur = "";
+    const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 80;
     allSecs.forEach(sec => {{
-      if (sec.getBoundingClientRect().top <= 130) cur = sec.id;
+      if (sec.getBoundingClientRect().top <= headerH + 20) cur = sec.id;
     }});
     navLinks.forEach(l => {{
       l.classList.toggle("active", !!cur && l.getAttribute("href") === "#" + cur);
@@ -494,8 +536,9 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
     kst = timezone(timedelta(hours=9))
     collected_at = datetime.now(kst).strftime("%m/%d %H:%M")
 
-    nav_items = ""
-    sections  = ""
+    nav_items     = ""
+    sidebar_items = ""
+    sections      = ""
 
     for cat, label in CATEGORY_LABELS.items():
         articles  = news_by_category.get(cat, [])
@@ -504,14 +547,24 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
         icon_html = _FLAG_IMG.get(cat, emoji)
         count     = len(articles)
 
-        nav_empty_cls = " nav-empty" if count == 0 else ""
-        nav_icon = _FLAG_IMG.get(cat, emoji)
+        empty_cls = " nav-empty" if count == 0 else ""
+
+        # 상단 탭 (모바일용)
         nav_items += (
-            f'<a href="#sec-{cat}" class="nav-link{nav_empty_cls}" style="--c:{color}">'
-            f'{nav_icon} {label} <span class="nav-count">{count}</span></a>'
+            f'<a href="#sec-{cat}" class="nav-link{empty_cls}" style="--c:{color}">'
+            f'{icon_html} {label} <span class="nav-count">{count}</span></a>'
+        )
+        # 사이드바 링크 (데스크톱용)
+        sidebar_items += (
+            f'<a href="#sec-{cat}" class="sidebar-link{empty_cls}" style="--c:{color}">'
+            f'<span class="sidebar-icon">{icon_html}</span>'
+            f'<span class="sidebar-label">{label}</span>'
+            f'<span class="sidebar-count">{count}</span>'
+            f'</a>'
         )
         sections += _section_html(cat, label, color, icon_html, articles)
 
+    total = sum(len(v) for v in news_by_category.values())
     js = _JS_TEMPLATE.format(pw_hash=pw_hash)
 
     return f"""<!DOCTYPE html>
@@ -555,15 +608,29 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
         </div>
       </div>
     </header>
-
+    <!-- 모바일 전용 상단 탭 -->
     <nav>
       <div class="nav-inner">{nav_items}</div>
     </nav>
   </div>
 
-  <main>
-    {sections}
-  </main>
+  <!-- 데스크톱: 사이드바 + 메인 콘텐츠 -->
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">자동차 산업동향 브리핑</div>
+        <div class="sidebar-date">{report_date} &nbsp;·&nbsp; 총 {total}건</div>
+      </div>
+      <nav class="sidebar-nav">
+        {sidebar_items}
+      </nav>
+      <div class="sidebar-footer">HL Mando CQO · Quality Planning</div>
+    </aside>
+
+    <main class="main-content">
+      {sections}
+    </main>
+  </div>
 
   <footer>
     <strong>HL Mando CQO &nbsp;·&nbsp; Quality Planning</strong><br>
