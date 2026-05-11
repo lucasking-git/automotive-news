@@ -66,8 +66,11 @@ body{font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;backgrou
 #main{display:none;animation:fadeUp .4s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
+/* Sticky wrapper — header + nav 함께 고정 */
+.sticky-wrap{position:sticky;top:0;z-index:100}
+
 /* Header */
-header{background:linear-gradient(135deg,#003B6F 0%,#0066B2 100%);color:#fff;padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,50,120,.4)}
+header{background:linear-gradient(135deg,#003B6F 0%,#0066B2 100%);color:#fff;padding:16px 24px;box-shadow:0 2px 20px rgba(0,50,120,.4)}
 .header-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:14px}
 .header-icon{width:46px;height:46px;flex-shrink:0;background:linear-gradient(135deg,#00ADE9,#0055A4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,173,233,.45)}
 .header-title{font-size:18px;font-weight:800;letter-spacing:-.4px}
@@ -526,8 +529,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
     <div class="gate-brand">HL MANDO &nbsp;·&nbsp; CQO &nbsp;·&nbsp; QUALITY PLANNING</div>
     <div class="gate-sub">
       HL Mando CQO 조직 Quality Planning에서 관리하는<br>
-      품질기획팀 전용 브리핑 페이지입니다<br>
-      <span style="font-size:11.5px;opacity:.7">접근 권한이 있는 구성원만 이용할 수 있습니다</span>
+      자동차 산업동향 브리핑 페이지입니다
     </div>
     <div class="gate-label">비밀번호</div>
     <div class="pw-wrap">
@@ -540,20 +542,22 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
 </div>
 
 <div id="main">
-  <header>
-    <div class="header-inner">
-      <div class="header-icon">📋</div>
-      <div>
-        <div class="header-title">자동차 산업동향 브리핑</div>
-        <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
-        <div class="header-meta">{report_date} &nbsp;·&nbsp; 수집 <span class="collect-time">{collected_at} KST</span> &nbsp;·&nbsp; 매일 오전 7시 업데이트</div>
+  <div class="sticky-wrap">
+    <header>
+      <div class="header-inner">
+        <div class="header-icon">📋</div>
+        <div>
+          <div class="header-title">자동차 산업동향 브리핑</div>
+          <div class="header-org">HL Mando CQO &nbsp;·&nbsp; Quality Planning</div>
+          <div class="header-meta">{report_date} &nbsp;·&nbsp; 수집 <span class="collect-time">{collected_at} KST</span> &nbsp;·&nbsp; 매일 오전 7시 업데이트</div>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <nav>
-    <div class="nav-inner">{nav_items}</div>
-  </nav>
+    <nav>
+      <div class="nav-inner">{nav_items}</div>
+    </nav>
+  </div>
 
   <main>
     {sections}
