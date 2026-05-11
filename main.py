@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.crawler import collect_all_news
+from src.crawler import collect_all_news, fetch_cargokr_recall_stats, fetch_nhtsa_manufacturer_stats
 from src.report_generator import build_html
 
 
@@ -17,7 +17,12 @@ def main():
     today = datetime.now(kst).strftime("%Y년 %m월 %d일")
 
     news = collect_all_news()
-    html = build_html(news, today)
+
+    print("\n추가 현황 데이터 수집 중...")
+    kr_stats    = fetch_cargokr_recall_stats()
+    us_mfr_stats = fetch_nhtsa_manufacturer_stats(2026)
+
+    html = build_html(news, today, recall_kr_stats=kr_stats, recall_us_mfr_stats=us_mfr_stats)
 
     docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
     os.makedirs(docs_dir, exist_ok=True)

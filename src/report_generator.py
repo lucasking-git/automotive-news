@@ -200,6 +200,26 @@ nav::-webkit-scrollbar{display:none}
 footer{background:#003B6F;border-top:2px solid rgba(0,173,233,.25);text-align:center;font-size:12px;color:rgba(255,255,255,.4);padding:22px 16px}
 footer strong{color:rgba(255,255,255,.75)}
 
+/* ── Recall Stats Overview (국내 연도별/월별 현황) ── */
+.recall-overview{padding:16px 20px 12px;background:linear-gradient(135deg,#f0f8fd 0%,#e8f0fb 100%);border-bottom:1px solid #bee3f8}
+.recall-overview-title{font-size:13px;font-weight:700;margin-bottom:10px}
+.recall-stats-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px}
+.recall-stats-table th{background:#0055A4;color:#fff;padding:6px 8px;text-align:center;font-weight:700;font-size:11px;border:1px solid rgba(255,255,255,.2)}
+.recall-stats-table td{padding:5px 8px;text-align:right;border:1px solid #dbeafe;color:var(--text-1);background:#fff}
+.recall-stats-table tr:hover td{background:#f0f8fd}
+.recall-stats-table .total-row td{background:#e8f0fb;font-weight:800;color:#003B6F}
+.recall-note{font-size:11px;color:var(--text-3);margin-top:5px;margin-bottom:0}
+
+/* ── Manufacturer Bar Chart (미국 제조사별 현황) ── */
+.mfr-chart{padding:14px 20px 16px;border-bottom:1px solid #edf2f9;background:#fcfdff}
+.mfr-chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.mfr-bar-row{display:flex;align-items:center;margin-bottom:6px;gap:10px;position:relative}
+.mfr-bar-label{width:150px;font-size:11.5px;font-weight:600;text-align:right;flex-shrink:0;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mfr-bar-wrap{flex:1;background:#e8f0fb;border-radius:4px;height:22px;position:relative;overflow:visible}
+.mfr-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#0055A4 0%,#00ADE9 100%);position:relative;min-width:4px}
+.mfr-bar-count{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.mfr-bar-count-out{position:absolute;left:calc(100% + 5px);top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#0055A4;white-space:nowrap}
+
 @media(max-width:480px){
   .gate-card{padding:36px 24px}
   .header-inner{gap:10px}
@@ -207,6 +227,8 @@ footer strong{color:rgba(255,255,255,.75)}
   .main-content{padding:0 12px 72px}
   .section-header{padding:14px 16px 12px}
   .card{padding:14px 16px 16px}
+  .mfr-bar-label{width:100px;font-size:10.5px}
+  .recall-stats-table{font-size:11px}
 }
 """
 
@@ -429,7 +451,100 @@ def _card_html(article: dict, color: str, show_source: bool = True) -> str:
     )
 
 
-def _section_html(cat: str, label: str, color: str, icon_html: str, articles: list[dict]) -> str:
+def _kr_recall_stats_html(stats: dict, color: str) -> str:
+    """국내 리콜 연도별/월별 현황 HTML 블록."""
+    has_yearly  = bool(stats.get("yearly"))
+    has_monthly = bool(stats.get("monthly"))
+    if not has_yearly and not has_monthly:
+        return ""
+
+    def _tbl(rows: list, note: str = "") -> str:
+        h = (
+            '<table class="recall-stats-table">'
+            '<thead>'
+            '<tr><th rowspan="2" style="width:68px">구분</th>'
+            '<th colspan="2">국산자동차</th>'
+            '<th colspan="2">수입자동차</th>'
+            '<th colspan="2">합계</th></tr>'
+            '<tr><th>차종</th><th>대수</th><th>차종</th><th>대수</th><th>차종</th><th>대수</th></tr>'
+            '</thead><tbody>'
+        )
+        for r in rows:
+            cls = ' class="total-row"' if r.get("is_total") else ""
+            h += (
+                f'<tr{cls}>'
+                f'<td style="text-align:center;font-weight:700">{_escape(r["label"])}</td>'
+                f'<td>{_escape(r["dom_types"])}</td><td>{_escape(r["dom_count"])}</td>'
+                f'<td>{_escape(r["imp_types"])}</td><td>{_escape(r["imp_count"])}</td>'
+                f'<td>{_escape(r["total_types"])}</td><td>{_escape(r["total_count"])}</td>'
+                f'</tr>'
+            )
+        h += '</tbody></table>'
+        if note:
+            h += f'<p class="recall-note">{note}</p>'
+        return h
+
+    html = '<div class="recall-overview">'
+
+    if has_yearly:
+        html += f'<div class="recall-overview-title" style="color:{color}">📊 연도별 리콜 현황</div>'
+        html += _tbl(stats["yearly"], "* 2026년 리콜현황 집계중")
+
+    if has_monthly:
+        mt = "14px" if has_yearly else "0px"
+        html += (
+            f'<div class="recall-overview-title" style="color:{color};margin-top:{mt}">'
+            f'📅 2026 월별 리콜 현황</div>'
+        )
+        html += _tbl(stats["monthly"], "* 2026년 리콜현황 집계중")
+
+    html += (
+        f'<a href="https://www.car.go.kr/ri/stat/list.do" class="recall-detail-link" '
+        f'target="_blank" rel="noopener noreferrer" style="margin-top:10px;display:inline-block">'
+        f'→ 리콜 현황 상세보기 (car.go.kr)</a>'
+    )
+    html += '</div>'
+    return html
+
+
+def _us_mfr_stats_html(mfr_stats: list, color: str) -> str:
+    """미국 NHTSA 제조사별 리콜 현황 가로 막대 차트 HTML 블록."""
+    if not mfr_stats:
+        return ""
+    max_cnt = max((r["recalls"] for r in mfr_stats), default=1) or 1
+    html = '<div class="mfr-chart">'
+    html += (
+        f'<div class="mfr-chart-title" style="color:{color}">'
+        f'🏭 2026년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
+    )
+    for item in mfr_stats:
+        pct     = max(3, int(item["recalls"] / max_cnt * 100))
+        name    = _escape(str(item["manufacturer"]))
+        cnt     = item["recalls"]
+        in_bar  = pct >= 25
+        html += (
+            f'<div class="mfr-bar-row">'
+            f'<span class="mfr-bar-label">{name}</span>'
+            f'<div class="mfr-bar-wrap">'
+            f'<div class="mfr-bar-fill" style="width:{pct}%">'
+        )
+        if in_bar:
+            html += f'<span class="mfr-bar-count">{cnt:,}</span>'
+        html += '</div>'
+        if not in_bar:
+            html += f'<span class="mfr-bar-count-out">{cnt:,}</span>'
+        html += '</div></div>'
+    html += (
+        '<p class="recall-note">출처: NHTSA · '
+        '<a href="https://data.transportation.gov/Automobiles/NHTSA-Recalls-by-Manufacturer/mu99-t4jn" '
+        'target="_blank" rel="noopener noreferrer" style="color:inherit">data.transportation.gov</a></p>'
+    )
+    html += '</div>'
+    return html
+
+
+def _section_html(cat: str, label: str, color: str, icon_html: str, articles: list[dict],
+                  kr_stats: dict | None = None, us_mfr_stats: list | None = None) -> str:
     count = len(articles)
     # recall_kr/recall_us는 카드별 출처 숨김 (섹션 헤더에 1회 표시)
     show_source = cat not in ("recall_kr", "recall_us")
@@ -495,15 +610,23 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
                 f'▾ &nbsp;나머지 <strong>{remaining}</strong>건 더 보기</button>'
             )
 
+    # 섹션 상단 현황 블록 (recall_kr / recall_us 전용)
+    overview_html = ""
+    if cat == "recall_kr" and kr_stats:
+        overview_html = _kr_recall_stats_html(kr_stats, color)
+    elif cat == "recall_us" and us_mfr_stats:
+        overview_html = _us_mfr_stats_html(us_mfr_stats, color)
+
     if not articles:
         body = (
+            f'{overview_html}'
             '<div class="empty-state">'
             '<div class="empty-icon">📭</div>'
             '<div class="empty-text">오늘은 수집된 정보가 없습니다.</div>'
             '</div>'
         )
     else:
-        body = f'<div class="cards-list">{content_html}</div>'
+        body = f'{overview_html}<div class="cards-list">{content_html}</div>'
 
     empty_cls = " section-empty" if count == 0 else ""
     # 출처 뱃지 — recall_kr / recall_us 섹션 헤더에 1회만 표시
@@ -530,7 +653,9 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
 
 # ── Public API ───────────────────────────────────────────────────────────────
 
-def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str:
+def build_html(news_by_category: dict[str, list[dict]], report_date: str,
+               recall_kr_stats: dict | None = None,
+               recall_us_mfr_stats: list | None = None) -> str:
     pw_hash = hashlib.sha256(SITE_PASSWORD.encode()).hexdigest()
 
     kst = timezone(timedelta(hours=9))
@@ -562,7 +687,11 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str) -> str
             f'<span class="sidebar-count">{count}</span>'
             f'</a>'
         )
-        sections += _section_html(cat, label, color, icon_html, articles)
+        sections += _section_html(
+            cat, label, color, icon_html, articles,
+            kr_stats=(recall_kr_stats if cat == "recall_kr" else None),
+            us_mfr_stats=(recall_us_mfr_stats if cat == "recall_us" else None),
+        )
 
     total = sum(len(v) for v in news_by_category.values())
     js = _JS_TEMPLATE.format(pw_hash=pw_hash)

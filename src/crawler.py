@@ -22,22 +22,43 @@ SESSION = requests.Session()
 SESSION.verify = False
 SESSION.headers.update(HEADERS)
 
-# NHTSA 조회 대상 (한국 부품사 공급 관련 OEM 위주)
+# NHTSA 조회 대상 (한국 부품사 공급 관련 OEM + 주요 글로벌 OEM 확대)
 NHTSA_VEHICLES = [
     ("Hyundai", "Tucson"),      ("Hyundai", "Santa Fe"),    ("Hyundai", "Elantra"),
-    ("Hyundai", "Sonata"),      ("Hyundai", "IONIQ 5"),
+    ("Hyundai", "Sonata"),      ("Hyundai", "IONIQ 5"),     ("Hyundai", "Palisade"),
     ("Kia",     "Sportage"),    ("Kia",     "Sorento"),      ("Kia",     "K5"),
-    ("Kia",     "Telluride"),
-    ("Genesis", "GV80"),        ("Genesis", "GV70"),
+    ("Kia",     "Telluride"),   ("Kia",     "Carnival"),
+    ("Genesis", "GV80"),        ("Genesis", "GV70"),         ("Genesis", "G80"),
     ("Toyota",  "Camry"),       ("Toyota",  "RAV4"),         ("Toyota",  "Corolla"),
-    ("Honda",   "Accord"),      ("Honda",   "CR-V"),
-    ("Ford",    "F-150"),       ("Ford",    "Explorer"),
-    ("Chevrolet", "Silverado"), ("Chevrolet", "Equinox"),
-    ("BMW",     "X5"),          ("BMW",     "3 Series"),
-    ("Mercedes-Benz", "GLE"),   ("Mercedes-Benz", "C-Class"),
-    ("Volkswagen", "Tiguan"),
-    ("Nissan",  "Rogue"),
+    ("Toyota",  "Tacoma"),      ("Toyota",  "Tundra"),       ("Toyota",  "Highlander"),
+    ("Honda",   "Accord"),      ("Honda",   "CR-V"),         ("Honda",   "Pilot"),
+    ("Honda",   "Civic"),       ("Honda",   "Odyssey"),
+    ("Ford",    "F-150"),       ("Ford",    "Explorer"),     ("Ford",    "Escape"),
+    ("Ford",    "Bronco"),      ("Ford",    "Edge"),         ("Ford",    "Expedition"),
+    ("Chevrolet", "Silverado"), ("Chevrolet", "Equinox"),    ("Chevrolet", "Malibu"),
+    ("Chevrolet", "Traverse"),  ("Chevrolet", "Tahoe"),
+    ("GMC",     "Sierra"),      ("GMC",     "Yukon"),        ("GMC",     "Terrain"),
+    ("Cadillac", "Escalade"),   ("Cadillac", "XT5"),
+    ("BMW",     "X5"),          ("BMW",     "3 Series"),     ("BMW",     "X3"),
+    ("BMW",     "5 Series"),    ("BMW",     "X7"),
+    ("Mercedes-Benz", "GLE"),   ("Mercedes-Benz", "C-Class"), ("Mercedes-Benz", "GLC"),
+    ("Mercedes-Benz", "E-Class"),
+    ("Volkswagen", "Tiguan"),   ("Volkswagen", "Jetta"),     ("Volkswagen", "Atlas"),
+    ("Nissan",  "Rogue"),       ("Nissan",  "Altima"),       ("Nissan",  "Pathfinder"),
+    ("Nissan",  "Frontier"),
+    ("Subaru",  "Forester"),    ("Subaru",  "Outback"),      ("Subaru",  "Crosstrek"),
+    ("Tesla",   "Model 3"),     ("Tesla",   "Model Y"),      ("Tesla",   "Model S"),
+    ("Tesla",   "Model X"),
+    ("Jeep",    "Grand Cherokee"), ("Jeep", "Wrangler"),     ("Jeep",    "Compass"),
+    ("Ram",     "1500"),        ("Ram",     "2500"),
+    ("Dodge",   "Charger"),     ("Dodge",   "Durango"),
+    ("Chrysler", "Pacifica"),
     ("Stellantis", "Ram 1500"),
+    ("Lincoln",  "Navigator"),  ("Lincoln", "Corsair"),
+    ("Mazda",   "CX-5"),        ("Mazda",   "CX-9"),        ("Mazda",   "3"),
+    ("Volvo",   "XC90"),        ("Volvo",   "XC60"),
+    ("Audi",    "Q5"),          ("Audi",    "A4"),           ("Audi",    "Q7"),
+    ("Porsche", "Cayenne"),     ("Porsche", "Macan"),
 ]
 NHTSA_YEARS = [2022, 2023, 2024, 2025, 2026]
 
@@ -61,7 +82,7 @@ def _clean(text: str, max_len: int = 200) -> str:
 
 
 def _parse_nhtsa_date(date_str: str) -> datetime | None:
-    for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d"):
+    for fmt in ("%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d"):  # NHTSA is MM/DD/YYYY
         try:
             return datetime.strptime(date_str.strip(), fmt).replace(tzinfo=timezone.utc)
         except Exception:
@@ -178,7 +199,7 @@ def fetch_cargokr_individual_recalls(max_days: int = 60) -> list[dict]:
                 continue
 
             seen.add(recall_id)
-            link = f"{base}/ri/stat/detail.do?recallId={recall_id}&ctype=O"
+            link = f"{base}/ri/stat/list.do"
             articles.append({
                 "title":     title,
                 "summary":   "",
@@ -264,6 +285,62 @@ def fetch_cargokr_stats() -> list[dict]:
     return articles
 
 
+def fetch_cargokr_recall_stats() -> dict:
+    """car.go.kr 연도별/월별 리콜 현황 수집 (rs/stats/rcList.do)."""
+    stats: dict = {"yearly": [], "monthly": []}
+    url = "https://www.car.go.kr/rs/stats/rcList.do"
+    month_re = re.compile(r'^\d{2}월$')
+    year_re  = re.compile(r'^\d{4}년\*?$')
+    total_re = re.compile(r'^계\*?$')
+
+    def _parse_table(soup, patterns: list) -> list:
+        rows = []
+        for table in soup.select("table")[:1]:
+            for row in table.select("tr"):
+                ths = [th.get_text(strip=True) for th in row.select("th")]
+                tds = [td.get_text(strip=True) for td in row.select("td")]
+                if not ths or len(tds) < 6:
+                    continue
+                label = ths[0]
+                if not any(p.match(label) for p in patterns):
+                    continue
+                rows.append({
+                    "label": label,
+                    "dom_types": tds[0], "dom_count": tds[1],
+                    "imp_types": tds[2], "imp_count": tds[3],
+                    "total_types": tds[4], "total_count": tds[5],
+                    "is_total": bool(total_re.match(label)),
+                })
+        return rows
+
+    base_data = {
+        "rcType": "", "statType": "", "recallDateFrom": "",
+        "recallYear": "", "recallMonth": "0", "organ": "",
+    }
+
+    try:
+        # 월별 현황 (2026년) — rcType 공백, recallYear=2026
+        r1 = SESSION.post(url, data={**base_data, "recallYear": "2026"}, timeout=12)
+        if r1.status_code == 200:
+            monthly = _parse_table(BeautifulSoup(r1.text, "lxml"), [month_re, total_re])
+            if monthly:
+                stats["monthly"] = monthly
+                print(f"  [car.go.kr 현황] 월별 {len(monthly)}행 수집")
+
+        # 연도별 현황 (2025~2026) — rcType=Y, recallYear=2025 (시작연도)
+        r2 = SESSION.post(url, data={**base_data, "rcType": "Y", "recallYear": "2025"}, timeout=12)
+        if r2.status_code == 200:
+            yearly = _parse_table(BeautifulSoup(r2.text, "lxml"), [year_re, total_re])
+            if yearly:
+                stats["yearly"] = yearly
+                print(f"  [car.go.kr 현황] 연도별 {len(yearly)}행 수집")
+
+    except Exception as ex:
+        print(f"  [car.go.kr 현황] 수집 실패: {ex}")
+
+    return stats
+
+
 def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list[dict]:
     """단일 차종 NHTSA 리콜 조회."""
     articles = []
@@ -321,6 +398,62 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
 
     results.sort(key=lambda x: x["published"], reverse=True)
     return results
+
+
+def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
+    """NHTSA {year}년 제조사별 리콜 건수 Top 12 집계 (모든 모델연도 조회, 접수일 기준 필터)."""
+    from collections import defaultdict
+    cutoff_start = datetime(year, 1, 1, tzinfo=timezone.utc)
+    cutoff_end   = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    totals: dict[str, int] = defaultdict(int)
+    seen: set[str] = set()
+
+    def _fetch_one(make: str, model: str, model_year: int) -> list:
+        items = []
+        try:
+            s = requests.Session()
+            s.verify = False
+            s.headers.update(HEADERS)
+            url = (
+                f"https://api.nhtsa.gov/recalls/recallsByVehicle"
+                f"?make={requests.utils.quote(make)}"
+                f"&model={requests.utils.quote(model)}"
+                f"&modelYear={model_year}"
+            )
+            resp = s.get(url, timeout=12)
+            if resp.status_code != 200:
+                return items
+            for r in resp.json().get("results", []):
+                camp = r.get("NHTSACampaignNumber", "")
+                if not camp:
+                    continue
+                pub = _parse_nhtsa_date(r.get("ReportReceivedDate", ""))
+                if pub and cutoff_start <= pub < cutoff_end:
+                    items.append((camp, r.get("Manufacturer", make)))
+        except Exception:
+            pass
+        return items
+
+    # 모든 차종 × 모든 모델연도 조회 (접수일 기준으로 year 필터링)
+    tasks = [(make, model, y) for make, model in NHTSA_VEHICLES for y in NHTSA_YEARS]
+    raw: list[tuple[str, str]] = []
+
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        futures = {executor.submit(_fetch_one, m, mo, y): None for m, mo, y in tasks}
+        for future in as_completed(futures):
+            raw.extend(future.result())
+
+    for camp, mfr in raw:
+        if camp not in seen:
+            seen.add(camp)
+            totals[mfr] += 1
+
+    result = sorted(
+        [{"manufacturer": k, "recalls": v} for k, v in totals.items()],
+        key=lambda x: x["recalls"], reverse=True,
+    )[:12]
+    print(f"  [NHTSA 제조사 현황] {year}년 상위 {len(result)}개 집계")
+    return result
 
 
 _RECALL_KW = ["리콜", "시정조치", "결함", "자발적 시정"]
