@@ -433,8 +433,8 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
     count = len(articles)
     # recall_kr/recall_us는 카드별 출처 숨김 (섹션 헤더에 1회 표시)
     show_source = cat not in ("recall_kr", "recall_us")
-    # recall_us(NHTSA)는 날짜 구분선 없이 플랫 리스트
-    group_by_date = cat != "recall_us"
+    # recall_kr, recall_us는 날짜 구분선 없이 플랫 리스트
+    group_by_date = cat not in ("recall_kr", "recall_us")
 
     sorted_articles = sorted(
         articles[:60],
