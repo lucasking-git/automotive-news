@@ -499,9 +499,9 @@ def _kr_recall_stats_html(stats: dict, color: str) -> str:
         html += _tbl(stats["monthly"], "* 2026년 리콜현황 집계중")
 
     html += (
-        f'<a href="https://www.car.go.kr/ri/stat/list.do" class="recall-detail-link" '
+        f'<a href="https://www.car.go.kr/rs/stats/rcList.do" class="recall-detail-link" '
         f'target="_blank" rel="noopener noreferrer" style="margin-top:10px;display:inline-block">'
-        f'→ 리콜 현황 상세보기 (car.go.kr)</a>'
+        f'→국내 리콜통계 확인하기</a>'
     )
     html += '</div>'
     return html

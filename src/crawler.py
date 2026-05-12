@@ -402,13 +402,61 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
 
 
 def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
-    """NHTSA {year}년 제조사별 리콜 건수 Top 12 집계 (모든 모델연도 조회, 접수일 기준 필터)."""
+    """NHTSA {year}년 제조사별 리콜 건수 Top 12 집계 (vPIC로 전 차종 동적 커버)."""
     from collections import defaultdict
     cutoff_start = datetime(year, 1, 1, tzinfo=timezone.utc)
     cutoff_end   = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     totals: dict[str, int] = defaultdict(int)
     seen: set[str] = set()
 
+    # Step 1: vPIC API로 각 메이커별 Truck+MPV 전 모델 병렬 수집
+    print("  [NHTSA 제조사] vPIC 모델 목록 수집 중...")
+
+    def _vpic_fetch(make: str, yr: int, vtype: str) -> list[tuple[str, str]]:
+        pairs = []
+        try:
+            s = requests.Session()
+            s.verify = False
+            s.headers.update(HEADERS)
+            url = (
+                f"https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear"
+                f"/make/{requests.utils.quote(make)}"
+                f"/modelyear/{yr}"
+                f"/vehicleType/{requests.utils.quote(vtype)}"
+                f"?format=json"
+            )
+            resp = s.get(url, timeout=10)
+            if resp.status_code == 200:
+                for item in resp.json().get("Results", []):
+                    model = item.get("Model_Name", "")
+                    if model:
+                        pairs.append((make, model))
+        except Exception:
+            pass
+        return pairs
+
+    vpic_tasks = [
+        (make, yr, vtype)
+        for make in _NHTSA_MAKES
+        for yr in [year - 1, year]
+        for vtype in ["Truck", "MPV"]
+    ]
+
+    all_pairs: set[tuple[str, str]] = set()
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        vpic_futures = {executor.submit(_vpic_fetch, m, y, v): None for m, y, v in vpic_tasks}
+        for future in as_completed(vpic_futures):
+            for pair in future.result():
+                all_pairs.add(pair)
+
+    # 기존 NHTSA_VEHICLES 보완 (vPIC에 없는 모델 포함)
+    for pair in NHTSA_VEHICLES:
+        all_pairs.add(pair)
+
+    all_vehicles = list(all_pairs)
+    print(f"  [NHTSA 제조사] {len(all_vehicles)}개 차종×{len(NHTSA_YEARS)}년도 NHTSA 조회 중...")
+
+    # Step 2: NHTSA API 병렬 조회 (접수일 기준으로 year 필터링)
     def _fetch_one(make: str, model: str, model_year: int) -> list:
         items = []
         try:
@@ -435,8 +483,7 @@ def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
             pass
         return items
 
-    # 차종×모든 모델연도 조회 (접수일 기준으로 year 필터링)
-    tasks = [(make, model, y) for make, model in NHTSA_VEHICLES for y in NHTSA_YEARS]
+    tasks = [(make, model, y) for make, model in all_vehicles for y in NHTSA_YEARS]
     raw: list[tuple[str, str]] = []
 
     with ThreadPoolExecutor(max_workers=12) as executor:
