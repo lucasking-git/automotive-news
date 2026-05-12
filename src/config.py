@@ -1,7 +1,7 @@
 NEWS_MAX_AGE_DAYS = 2
 
 # 사이트 접근 비밀번호
-SITE_PASSWORD = "HL2025"
+SITE_PASSWORD = "HL2026"
 
 CATEGORY_LABELS = {
     "recall_kr":  "국내 리콜",

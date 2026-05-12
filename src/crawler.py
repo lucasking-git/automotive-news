@@ -62,6 +62,9 @@ NHTSA_VEHICLES = [
 ]
 NHTSA_YEARS = [2022, 2023, 2024, 2025, 2026]
 
+# 제조사 목록 (NHTSA_VEHICLES에서 추출) — 모델 미지정으로 전체 차종 커버
+_NHTSA_MAKES = sorted({make for make, _ in NHTSA_VEHICLES})
+
 
 def _parse_date(entry) -> datetime:
     for attr in ("published_parsed", "updated_parsed"):
@@ -82,7 +85,7 @@ def _clean(text: str, max_len: int = 200) -> str:
 
 
 def _parse_nhtsa_date(date_str: str) -> datetime | None:
-    for fmt in ("%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d"):  # NHTSA is MM/DD/YYYY
+    for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d"):  # NHTSA API returns DD/MM/YYYY
         try:
             return datetime.strptime(date_str.strip(), fmt).replace(tzinfo=timezone.utc)
         except Exception:
@@ -345,31 +348,29 @@ def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list
     """단일 차종 NHTSA 리콜 조회."""
     articles = []
     try:
-        session = requests.Session()
-        session.verify = False
-        session.headers.update(HEADERS)
-
+        s = requests.Session()
+        s.verify = False
+        s.headers.update(HEADERS)
         url = (
             f"https://api.nhtsa.gov/recalls/recallsByVehicle"
             f"?make={requests.utils.quote(make)}"
             f"&model={requests.utils.quote(model)}"
             f"&modelYear={year}"
         )
-        resp = session.get(url, timeout=12)
+        resp = s.get(url, timeout=15)
         if resp.status_code != 200:
             return articles
         for r in resp.json().get("results", []):
             pub = _parse_nhtsa_date(r.get("ReportReceivedDate", ""))
             if pub is None or pub < cutoff:
                 continue
-            campaign  = r.get("NHTSACampaignNumber", "")
-            component = r.get("Component", "")
-            summary   = _clean(r.get("Summary", ""), 250)
+            campaign    = r.get("NHTSACampaignNumber", "")
+            component   = r.get("Component", "")
+            summary     = _clean(r.get("Summary", ""), 250)
             consequence = _clean(r.get("Consequence", ""), 150)
             articles.append({
                 "title":     f"[NHTSA] {make} {model} {year} — {component}",
                 "summary":   f"{summary} {consequence}".strip(),
-                # ✅ 수정: #fragment 방식 → ?nhtsaId= 쿼리 파라미터 방식
                 "link":      f"https://www.nhtsa.gov/vehicle-safety/recalls?nhtsaId={campaign}",
                 "published": pub.strftime("%Y-%m-%d"),
                 "category":  "recall_us",
@@ -382,7 +383,7 @@ def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list
 def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
     """NHTSA 주요 차종 최근 리콜 병렬 수집."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=max_days)
-    tasks = [(make, model, year) for make, model in NHTSA_VEHICLES for year in NHTSA_YEARS]
+    tasks  = [(make, model, year) for make, model in NHTSA_VEHICLES for year in NHTSA_YEARS]
 
     results: list[dict] = []
     seen: set[str] = set()
@@ -391,7 +392,7 @@ def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
         futures = {executor.submit(_fetch_nhtsa_one, m, mo, y, cutoff): None for m, mo, y in tasks}
         for future in as_completed(futures):
             for article in future.result():
-                key = article["title"]
+                key = article["link"]  # 캠페인 번호 기준 중복 제거 (동일 리콜이 복수 차종에 걸리는 경우)
                 if key not in seen:
                     seen.add(key)
                     results.append(article)
@@ -420,7 +421,7 @@ def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
                 f"&model={requests.utils.quote(model)}"
                 f"&modelYear={model_year}"
             )
-            resp = s.get(url, timeout=12)
+            resp = s.get(url, timeout=15)
             if resp.status_code != 200:
                 return items
             for r in resp.json().get("results", []):
@@ -434,7 +435,7 @@ def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
             pass
         return items
 
-    # 모든 차종 × 모든 모델연도 조회 (접수일 기준으로 year 필터링)
+    # 차종×모든 모델연도 조회 (접수일 기준으로 year 필터링)
     tasks = [(make, model, y) for make, model in NHTSA_VEHICLES for y in NHTSA_YEARS]
     raw: list[tuple[str, str]] = []
 
