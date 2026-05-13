@@ -31,13 +31,23 @@ NHTSA_VEHICLES = [
     ("Genesis", "GV80"),        ("Genesis", "GV70"),         ("Genesis", "G80"),
     ("Toyota",  "Camry"),       ("Toyota",  "RAV4"),         ("Toyota",  "Corolla"),
     ("Toyota",  "Tacoma"),      ("Toyota",  "Tundra"),       ("Toyota",  "Highlander"),
+    ("Toyota",  "4Runner"),     ("Toyota",  "Sequoia"),      ("Toyota",  "Sienna"),
+    ("Toyota",  "Prius"),       ("Toyota",  "bZ4X"),         ("Toyota",  "Crown"),
     ("Honda",   "Accord"),      ("Honda",   "CR-V"),         ("Honda",   "Pilot"),
-    ("Honda",   "Civic"),       ("Honda",   "Odyssey"),
+    ("Honda",   "Civic"),       ("Honda",   "Odyssey"),      ("Honda",   "HR-V"),
+    ("Honda",   "Passport"),    ("Honda",   "Ridgeline"),
     ("Ford",    "F-150"),       ("Ford",    "Explorer"),     ("Ford",    "Escape"),
     ("Ford",    "Bronco"),      ("Ford",    "Edge"),         ("Ford",    "Expedition"),
+    ("Ford",    "F-250"),       ("Ford",    "F-350"),        ("Ford",    "Maverick"),
+    ("Ford",    "Ranger"),      ("Ford",    "Mustang"),      ("Ford",    "Transit"),
+    ("Ford",    "Bronco Sport"), ("Ford",   "Mustang Mach-E"), ("Ford",  "Transit Connect"),
+    ("Ford",    "EcoSport"),
     ("Chevrolet", "Silverado"), ("Chevrolet", "Equinox"),    ("Chevrolet", "Malibu"),
-    ("Chevrolet", "Traverse"),  ("Chevrolet", "Tahoe"),
+    ("Chevrolet", "Traverse"),  ("Chevrolet", "Tahoe"),      ("Chevrolet", "Colorado"),
+    ("Chevrolet", "Suburban"),  ("Chevrolet", "Blazer"),     ("Chevrolet", "Trailblazer"),
+    ("Chevrolet", "Bolt EV"),   ("Chevrolet", "Express"),    ("Chevrolet", "Camaro"),
     ("GMC",     "Sierra"),      ("GMC",     "Yukon"),        ("GMC",     "Terrain"),
+    ("GMC",     "Canyon"),      ("GMC",     "Acadia"),
     ("Cadillac", "Escalade"),   ("Cadillac", "XT5"),
     ("BMW",     "X5"),          ("BMW",     "3 Series"),     ("BMW",     "X3"),
     ("BMW",     "5 Series"),    ("BMW",     "X7"),
@@ -60,7 +70,7 @@ NHTSA_VEHICLES = [
     ("Audi",    "Q5"),          ("Audi",    "A4"),           ("Audi",    "Q7"),
     ("Porsche", "Cayenne"),     ("Porsche", "Macan"),
 ]
-NHTSA_YEARS = [2022, 2023, 2024, 2025, 2026]
+NHTSA_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
 
 # 제조사 목록 (NHTSA_VEHICLES에서 추출) — 모델 미지정으로 전체 차종 커버
 _NHTSA_MAKES = sorted({make for make, _ in NHTSA_VEHICLES})
@@ -344,9 +354,18 @@ def fetch_cargokr_recall_stats() -> dict:
     return stats
 
 
-def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list[dict]:
-    """단일 차종 NHTSA 리콜 조회."""
-    articles = []
+def _fetch_nhtsa_one(
+    make: str, model: str, year: int, article_cutoff: datetime
+) -> tuple[list[dict], list[tuple[str, str]]]:
+    """단일 차종 NHTSA 리콜 조회.
+
+    Returns:
+        articles: article_cutoff 이후 리콜 기사
+        campaigns: 현재연도 캠페인 [(campaign_id, manufacturer), ...]
+    """
+    articles: list[dict] = []
+    campaigns: list[tuple[str, str]] = []
+    cur_year_prefix = f"{datetime.now(timezone.utc).year % 100:02d}V"
     try:
         s = requests.Session()
         s.verify = False
@@ -359,12 +378,19 @@ def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list
         )
         resp = s.get(url, timeout=15)
         if resp.status_code != 200:
-            return articles
+            return articles, campaigns
         for r in resp.json().get("results", []):
+            campaign     = r.get("NHTSACampaignNumber", "")
+            manufacturer = r.get("Manufacturer", make)
+
+            # 현재연도 캠페인 → 제조사 통계용
+            if campaign.startswith(cur_year_prefix):
+                campaigns.append((campaign, manufacturer))
+
+            # 기사 수집 (날짜 필터)
             pub = _parse_nhtsa_date(r.get("ReportReceivedDate", ""))
-            if pub is None or pub < cutoff:
+            if pub is None or pub < article_cutoff:
                 continue
-            campaign    = r.get("NHTSACampaignNumber", "")
             component   = r.get("Component", "")
             summary     = _clean(r.get("Summary", ""), 250)
             consequence = _clean(r.get("Consequence", ""), 150)
@@ -377,130 +403,108 @@ def _fetch_nhtsa_one(make: str, model: str, year: int, cutoff: datetime) -> list
             })
     except Exception:
         pass
-    return articles
+    return articles, campaigns
 
 
-def fetch_nhtsa_recalls(max_days: int = 90) -> list[dict]:
-    """NHTSA 주요 차종 최근 리콜 병렬 수집."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=max_days)
-    tasks  = [(make, model, year) for make, model in NHTSA_VEHICLES for year in NHTSA_YEARS]
+def fetch_nhtsa_data(max_days: int = 90) -> tuple[list[dict], list[dict]]:
+    """NHTSA 주요 차종 최근 리콜 기사 + 현재연도 제조사 통계 동시 수집.
 
-    results: list[dict] = []
-    seen: set[str] = set()
+    Returns: (articles, mfr_stats_top12)
+    """
+    from collections import defaultdict
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(_fetch_nhtsa_one, m, mo, y, cutoff): None for m, mo, y in tasks}
+    article_cutoff = datetime.now(timezone.utc) - timedelta(days=max_days)
+    tasks = [(make, model, year) for make, model in NHTSA_VEHICLES for year in NHTSA_YEARS]
+    print(f"  [NHTSA] {len(tasks)}개 차종×연도 병렬 조회 중...")
+
+    all_articles: list[dict] = []
+    seen_link: set[str] = set()
+    seen_campaign: set[str] = set()
+    mfr_counts: dict[str, int] = defaultdict(int)
+
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        futures = {
+            executor.submit(_fetch_nhtsa_one, m, mo, y, article_cutoff): None
+            for m, mo, y in tasks
+        }
         for future in as_completed(futures):
-            for article in future.result():
-                key = article["link"]  # 캠페인 번호 기준 중복 제거 (동일 리콜이 복수 차종에 걸리는 경우)
-                if key not in seen:
-                    seen.add(key)
-                    results.append(article)
+            articles, campaigns = future.result()
+            for item in articles:
+                if item["link"] not in seen_link:
+                    seen_link.add(item["link"])
+                    all_articles.append(item)
+            for camp_id, mfr in campaigns:
+                if camp_id not in seen_campaign:
+                    seen_campaign.add(camp_id)
+                    mfr_counts[mfr] += 1
 
-    results.sort(key=lambda x: x["published"], reverse=True)
-    return results
+    sorted_articles = sorted(all_articles, key=lambda x: x["published"], reverse=True)
+    mfr_stats = sorted(
+        [{"manufacturer": k, "recalls": v} for k, v in mfr_counts.items()],
+        key=lambda x: x["recalls"],
+        reverse=True,
+    )[:12]
+
+    print(f"  [NHTSA] 기사 {len(sorted_articles)}건, 캠페인 {len(seen_campaign)}개")
+    return sorted_articles, mfr_stats
 
 
 def fetch_nhtsa_manufacturer_stats(year: int = 2026) -> list[dict]:
-    """NHTSA {year}년 제조사별 리콜 건수 Top 12 집계 (vPIC로 전 차종 동적 커버)."""
+    """NHTSA {year}년 제조사별 리콜 현황 Top 12 (루트 API).
+
+    루트 API는 기본적으로 최신 캠페인 번호 순 반환. 해당 연도 캠페인이
+    첫 페이지에 집중되므로 1~3회 호출로 전체 집계 가능.
+    API 실패 시 빈 리스트 반환 → collect_all_news에서 차종별 통계로 대체.
+    """
     from collections import defaultdict
-    cutoff_start = datetime(year, 1, 1, tzinfo=timezone.utc)
-    cutoff_end   = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    prefix = f"{year % 100:02d}V"
     totals: dict[str, int] = defaultdict(int)
     seen: set[str] = set()
 
-    # Step 1: vPIC API로 각 메이커별 Truck+MPV 전 모델 병렬 수집
-    print("  [NHTSA 제조사] vPIC 모델 목록 수집 중...")
+    s = requests.Session()
+    s.verify = False
+    s.headers.update(HEADERS)
 
-    def _vpic_fetch(make: str, yr: int, vtype: str) -> list[tuple[str, str]]:
-        pairs = []
+    offset = 0
+    page_size = 1000
+
+    print(f"  [NHTSA 제조사] {year}년 루트 API 수집 중...")
+    while True:
         try:
-            s = requests.Session()
-            s.verify = False
-            s.headers.update(HEADERS)
-            url = (
-                f"https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear"
-                f"/make/{requests.utils.quote(make)}"
-                f"/modelyear/{yr}"
-                f"/vehicleType/{requests.utils.quote(vtype)}"
-                f"?format=json"
+            resp = s.get(
+                "https://api.nhtsa.gov/recalls/",
+                params={"offset": offset, "max": page_size},
+                timeout=30,
             )
-            resp = s.get(url, timeout=10)
-            if resp.status_code == 200:
-                for item in resp.json().get("Results", []):
-                    model = item.get("Model_Name", "")
-                    if model:
-                        pairs.append((make, model))
-        except Exception:
-            pass
-        return pairs
-
-    vpic_tasks = [
-        (make, yr, vtype)
-        for make in _NHTSA_MAKES
-        for yr in [year - 1, year]
-        for vtype in ["Truck", "MPV"]
-    ]
-
-    all_pairs: set[tuple[str, str]] = set()
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        vpic_futures = {executor.submit(_vpic_fetch, m, y, v): None for m, y, v in vpic_tasks}
-        for future in as_completed(vpic_futures):
-            for pair in future.result():
-                all_pairs.add(pair)
-
-    # 기존 NHTSA_VEHICLES 보완 (vPIC에 없는 모델 포함)
-    for pair in NHTSA_VEHICLES:
-        all_pairs.add(pair)
-
-    all_vehicles = list(all_pairs)
-    print(f"  [NHTSA 제조사] {len(all_vehicles)}개 차종×{len(NHTSA_YEARS)}년도 NHTSA 조회 중...")
-
-    # Step 2: NHTSA API 병렬 조회 (접수일 기준으로 year 필터링)
-    def _fetch_one(make: str, model: str, model_year: int) -> list:
-        items = []
-        try:
-            s = requests.Session()
-            s.verify = False
-            s.headers.update(HEADERS)
-            url = (
-                f"https://api.nhtsa.gov/recalls/recallsByVehicle"
-                f"?make={requests.utils.quote(make)}"
-                f"&model={requests.utils.quote(model)}"
-                f"&modelYear={model_year}"
-            )
-            resp = s.get(url, timeout=15)
             if resp.status_code != 200:
-                return items
-            for r in resp.json().get("results", []):
-                camp = r.get("NHTSACampaignNumber", "")
-                if not camp:
-                    continue
-                pub = _parse_nhtsa_date(r.get("ReportReceivedDate", ""))
-                if pub and cutoff_start <= pub < cutoff_end:
-                    items.append((camp, r.get("Manufacturer", make)))
-        except Exception:
-            pass
-        return items
-
-    tasks = [(make, model, y) for make, model in all_vehicles for y in NHTSA_YEARS]
-    raw: list[tuple[str, str]] = []
-
-    with ThreadPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(_fetch_one, m, mo, y): None for m, mo, y in tasks}
-        for future in as_completed(futures):
-            raw.extend(future.result())
-
-    for camp, mfr in raw:
-        if camp not in seen:
-            seen.add(camp)
-            totals[mfr] += 1
+                print(f"  [NHTSA 제조사] 루트 API {resp.status_code} → 차종별 통계로 대체")
+                return []
+            results = resp.json().get("results", [])
+            if not results:
+                break
+            found_this_year = False
+            for rec in results:
+                camp = rec.get("campaignId", "")
+                mfr  = rec.get("manufacturerName", "")
+                if camp.startswith(prefix):
+                    found_this_year = True
+                    if camp not in seen:
+                        seen.add(camp)
+                        totals[mfr] += 1
+            if not found_this_year:
+                break
+            offset += len(results)
+        except Exception as ex:
+            print(f"  [NHTSA 제조사] 루트 API 오류: {ex} → 차종별 통계로 대체")
+            return []
 
     result = sorted(
         [{"manufacturer": k, "recalls": v} for k, v in totals.items()],
-        key=lambda x: x["recalls"], reverse=True,
+        key=lambda x: x["recalls"],
+        reverse=True,
     )[:12]
-    print(f"  [NHTSA 제조사 현황] {year}년 상위 {len(result)}개 집계")
+    print(f"  [NHTSA 제조사] {year}년 상위 {len(result)}개 제조사 ({len(seen)}개 캠페인)")
     return result
 
 
@@ -605,7 +609,13 @@ def fetch_molit_press_releases(max_days: int = 14) -> list[dict]:
     return articles
 
 
-def collect_all_news() -> dict[str, list[dict]]:
+def collect_all_news() -> tuple[dict[str, list[dict]], list[dict]]:
+    """뉴스·리콜 데이터 수집.
+
+    반환: (news_by_category, nhtsa_mfr_stats)
+      - news_by_category: 카테고리별 기사 dict
+      - nhtsa_mfr_stats:  미국 NHTSA 제조사별 리콜 현황 (Top 12)
+    """
     result: dict[str, list[dict]] = {
         cat: [] for cat in ["recall_kr", "recall_us", "news", "regulation"]
     }
@@ -658,14 +668,12 @@ def collect_all_news() -> dict[str, list[dict]]:
                 result["recall_kr"].append(a)
         print(f"  [car.go.kr] 통계 {len(cargokr_stats)}건")
 
-    # 4. NHTSA 미국 리콜
-    print("  [NHTSA] 주요 차종 리콜 수집 중 (병렬)...")
-    nhtsa = fetch_nhtsa_recalls(max_days=90)
+    # 4. NHTSA 미국 리콜 기사 + 차종별 제조사 통계 동시 수집
+    nhtsa_articles, vehicle_mfr_stats = fetch_nhtsa_data(max_days=90)
     existing = {a["title"] for a in result["recall_us"]}
-    for a in nhtsa:
+    for a in nhtsa_articles:
         if a["title"] not in existing:
             result["recall_us"].append(a)
-    print(f"  [NHTSA] {len(nhtsa)}건")
 
     # 5. 아우토바인 RSS
     print("  [아우토바인] RSS 수집 중...")
@@ -687,6 +695,14 @@ def collect_all_news() -> dict[str, list[dict]]:
             result[cat].append(a)
     print(f"  [국토부] {len(molit)}건")
 
+    # 7. NHTSA 제조사별 리콜 현황 (루트 API 우선, 실패 시 차종별 통계로 대체)
+    kst_year = datetime.now(timezone(timedelta(hours=9))).year
+    nhtsa_mfr_stats = fetch_nhtsa_manufacturer_stats(kst_year)
+    if not nhtsa_mfr_stats:
+        nhtsa_mfr_stats = vehicle_mfr_stats
+        if nhtsa_mfr_stats:
+            print(f"  [NHTSA 제조사] 차종별 집계 사용: {len(nhtsa_mfr_stats)}개 제조사")
+
     total = sum(len(v) for v in result.values())
     print(f"총 {total}건 수집 완료")
-    return result
+    return result, nhtsa_mfr_stats

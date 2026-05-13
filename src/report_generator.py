@@ -512,10 +512,11 @@ def _us_mfr_stats_html(mfr_stats: list, color: str) -> str:
     if not mfr_stats:
         return ""
     max_cnt = max((r["recalls"] for r in mfr_stats), default=1) or 1
+    cur_year = datetime.now(timezone(timedelta(hours=9))).year
     html = '<div class="mfr-chart">'
     html += (
         f'<div class="mfr-chart-title" style="color:{color}">'
-        f'🏭 2026년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
+        f'🏭 {cur_year}년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
     )
     for item in mfr_stats:
         pct     = max(3, int(item["recalls"] / max_cnt * 100))
