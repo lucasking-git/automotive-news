@@ -933,7 +933,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str,
 
 <button id="scrollTop" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="맨 위로">↑</button>
 
-<script>{js}</script>
 <script>{_CHART_JS}</script>
+<script>{js}</script>
 </body>
 </html>"""
