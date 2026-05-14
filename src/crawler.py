@@ -477,22 +477,21 @@ def fetch_nhtsa_recall_stats() -> dict:
     print(f"  [NHTSA 현황] data.transportation.gov {cur_year}/{prev_year}년 통계 수집 중...")
 
     try:
-        # ── 1. 연도별 현황 ─────────────────────────────────────────────
-        for yr in [prev_year, cur_year]:
-            r = s.get(
-                _TRANSPORTATION_GOV_URL,
-                params={
-                    "$select": "count(*) AS cnt",
-                    "$where": (
-                        f"report_received_date >= '{yr}-01-01T00:00:00.000' "
-                        f"AND report_received_date < '{yr + 1}-01-01T00:00:00.000'"
-                    ),
-                    "$limit": 1,
-                },
-                timeout=20,
-            )
-            cnt = int(r.json()[0].get("cnt", 0)) if r.status_code == 200 and r.json() else 0
-            stats["yearly"].append({"year": yr, "count": cnt})
+        # ── 1. 연도별 현황 (2021~현재) ────────────────────────────────
+        r = s.get(
+            _TRANSPORTATION_GOV_URL,
+            params={
+                "$select": "date_extract_y(report_received_date) AS year, count(*) AS cnt",
+                "$where":  "report_received_date >= '2021-01-01T00:00:00.000'",
+                "$group":  "year",
+                "$order":  "year ASC",
+                "$limit":  20,
+            },
+            timeout=20,
+        )
+        if r.status_code == 200:
+            year_map = {int(float(row["year"])): int(row["cnt"]) for row in r.json() if "year" in row}
+            stats["yearly"] = [{"year": yr, "count": year_map.get(yr, 0)} for yr in range(2021, cur_year + 1)]
 
         # ── 2. 월별 현황 (현재연도) ────────────────────────────────────
         r = s.get(
@@ -531,9 +530,9 @@ def fetch_nhtsa_recall_stats() -> dict:
                 for row in r.json()
             ]
 
-        cur_cnt  = stats["yearly"][1]["count"] if len(stats["yearly"]) > 1 else 0
-        prev_cnt = stats["yearly"][0]["count"] if stats["yearly"] else 0
-        print(f"  [NHTSA 현황] {cur_year}년: {cur_cnt}건, {prev_year}년: {prev_cnt}건")
+        cur_cnt  = next((r["count"] for r in stats["yearly"] if r["year"] == cur_year), 0)
+        prev_cnt = next((r["count"] for r in stats["yearly"] if r["year"] == prev_year), 0)
+        print(f"  [NHTSA 현황] {cur_year}년: {cur_cnt}건, {prev_year}년: {prev_cnt}건, 총 {len(stats['yearly'])}개 연도")
 
     except Exception as ex:
         print(f"  [NHTSA 현황] 수집 오류: {ex}")

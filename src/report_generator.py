@@ -1,4 +1,5 @@
 import re
+import json as _json
 import hashlib
 from datetime import datetime, timezone, timedelta
 from src.config import CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS, SITE_PASSWORD
@@ -211,21 +212,12 @@ footer strong{color:rgba(255,255,255,.75)}
 .recall-stats-table .total-row td{background:#e8f0fb;font-weight:800;color:#003B6F}
 .recall-note{font-size:11px;color:var(--text-3);margin-top:5px;margin-bottom:0}
 
-/* ── Manufacturer Bar Chart (미국 제조사별 현황) ── */
-.mfr-chart{padding:14px 20px 16px;border-bottom:1px solid #edf2f9;background:#fcfdff}
-.mfr-chart.month-chart{background:linear-gradient(135deg,#f0f8fd 0%,#e8f0fb 100%);border-bottom:1px solid #bee3f8}
-.mfr-chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
-.mfr-bar-row{display:flex;align-items:center;margin-bottom:6px;gap:10px;position:relative}
-.mfr-bar-label{width:150px;font-size:11.5px;font-weight:600;text-align:right;flex-shrink:0;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mfr-bar-label.month-label{width:52px;font-size:11.5px}
-.mfr-bar-wrap{flex:1;background:#e8f0fb;border-radius:4px;height:22px;position:relative;overflow:visible}
-.mfr-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#0055A4 0%,#00ADE9 100%);position:relative;min-width:4px}
-.mfr-bar-count{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
-.mfr-bar-count-out{position:absolute;left:calc(100% + 5px);top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#0055A4;white-space:nowrap}
-
-/* KATECH 섹션 색상 */
-.section[style*="--sec-c:#7C3AED"] .mfr-bar-fill{background:linear-gradient(90deg,#6D28D9 0%,#A78BFA 100%)}
-.section[style*="--sec-c:#7C3AED"] .mfr-bar-count-out{color:#7C3AED}
+/* ── NHTSA Chart containers ── */
+.recall-chart-block{padding:14px 20px 16px;border-bottom:1px solid #edf2f9;background:#fcfdff}
+.recall-chart-block.gradient-bg{background:linear-gradient(135deg,#f0f8fd 0%,#e8f0fb 100%);border-bottom:1px solid #bee3f8}
+.recall-chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.chart-canvas-wrap{position:relative;height:240px}
+.chart-canvas-wrap.tall{height:300px}
 
 @media(max-width:480px){
   .gate-card{padding:36px 24px}
@@ -344,12 +336,140 @@ function initMain() {{
   }}
   window.addEventListener("scroll", updateNav, {{passive: true}});
   updateNav();
+
+  if (window.initNhtsaCharts) window.initNhtsaCharts();
 }}
 
 const scrollBtn = document.getElementById("scrollTop");
 window.addEventListener("scroll", () => {{
   scrollBtn.classList.toggle("visible", window.scrollY > 400);
 }});
+"""
+
+# Chart.js 초기화 (format string 외부로 분리 — 중괄호 이스케이프 불필요)
+_CHART_JS = """
+const _NHTSA_PIE_COLORS = [
+  '#003B6F','#0055A4','#0077CC','#00ADE9',
+  '#33C3FF','#5E9DF5','#8B6DDF','#B5449A',
+  '#D95F5F','#E8943A','#F5C226','#57C75A'
+];
+
+function initNhtsaCharts() {
+  const d = window._nhtsaStats;
+  if (!d) return;
+  const lineColor = d.color || '#0055A4';
+  const fillColor = 'rgba(0,85,164,0.08)';
+
+  // ── 연도별 실선 차트 ──────────────────────────────────────────
+  const yEl = document.getElementById('nhtsaYearlyChart');
+  if (yEl && d.yearly && d.yearly.length) {
+    new Chart(yEl, {
+      type: 'line',
+      data: {
+        labels: d.yearly.map(r => r.year + '년'),
+        datasets: [{
+          label: 'NHTSA 리콜 건수',
+          data: d.yearly.map(r => r.count),
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 2.5,
+          pointBackgroundColor: lineColor,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + '건' } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: {
+            beginAtZero: false,
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { callback: v => v.toLocaleString() }
+          }
+        }
+      }
+    });
+  }
+
+  // ── 월별 실선 차트 ────────────────────────────────────────────
+  const mEl = document.getElementById('nhtsaMonthlyChart');
+  if (mEl && d.monthly && d.monthly.length) {
+    new Chart(mEl, {
+      type: 'line',
+      data: {
+        labels: d.monthly.map(r => r.month + '월'),
+        datasets: [{
+          label: 'NHTSA 리콜 건수',
+          data: d.monthly.map(r => r.count),
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 2.5,
+          pointBackgroundColor: lineColor,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + '건' } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { callback: v => v.toLocaleString() }
+          }
+        }
+      }
+    });
+  }
+
+  // ── 제조사별 파이 차트 ────────────────────────────────────────
+  const pEl = document.getElementById('nhtsaMfrChart');
+  if (pEl && d.mfr && d.mfr.length) {
+    new Chart(pEl, {
+      type: 'pie',
+      data: {
+        labels: d.mfr.map(r => r.manufacturer),
+        datasets: [{
+          data: d.mfr.map(r => r.recalls),
+          backgroundColor: _NHTSA_PIE_COLORS.slice(0, d.mfr.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { boxWidth: 14, font: { size: 11 }, padding: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.label + ': ' + ctx.parsed.toLocaleString() + '건'
+            }
+          }
+        }
+      }
+    });
+  }
+}
 """
 
 
@@ -515,10 +635,10 @@ def _kr_recall_stats_html(stats: dict, color: str) -> str:
 
 
 def _us_recall_stats_html(us_stats: dict, color: str) -> str:
-    """미국 NHTSA 리콜 현황 HTML 블록 (연도별 + 월별 + 제조사별).
+    """미국 NHTSA 리콜 현황 HTML 블록 (연도별 실선 + 월별 실선 + 제조사별 파이 — Chart.js).
 
     us_stats = {
-      "yearly":  [{"year": 2025, "count": N}, {"year": 2026, "count": N}],
+      "yearly":  [{"year": 2021, "count": N}, ..., {"year": 2026, "count": N}],
       "monthly": [{"month": 1,   "count": N}, ...],
       "mfr":     [{"manufacturer": "...", "recalls": N}, ...]
     }
@@ -532,100 +652,54 @@ def _us_recall_stats_html(us_stats: dict, color: str) -> str:
 
     kst_now  = datetime.now(timezone(timedelta(hours=9)))
     cur_year = kst_now.year
-    html     = ""
 
-    # ── 1. 연도별 현황 테이블 ────────────────────────────────────────
+    # JSON 데이터 임베드 (Chart.js 초기화에 사용)
+    data_payload = _json.dumps({
+        "yearly":  yearly,
+        "monthly": monthly,
+        "mfr":     mfr,
+        "curYear": cur_year,
+        "color":   color,
+    }, ensure_ascii=False)
+    html = f'<script>window._nhtsaStats = {data_payload};</script>'
+
+    # ── 1. 연도별 실선 차트 (2021~현재) ────────────────────────────
     if yearly:
-        html += '<div class="recall-overview">'
         html += (
-            f'<div class="recall-overview-title" style="color:{color}">'
-            f'📊 연도별 NHTSA 리콜 현황 ({cur_year - 1}년 vs {cur_year}년 YTD)</div>'
+            f'<div class="recall-chart-block gradient-bg">'
+            f'<div class="recall-chart-title" style="color:{color}">'
+            f'📊 연도별 NHTSA 리콜 현황 (2021~{cur_year}년)</div>'
+            f'<div class="chart-canvas-wrap"><canvas id="nhtsaYearlyChart"></canvas></div>'
+            f'<p class="recall-note">* {cur_year}년 집계중 (Vehicle·Equipment·Tire·Child Seat 전 유형 포함)</p>'
+            f'</div>'
         )
-        html += (
-            '<table class="recall-stats-table">'
-            '<thead><tr>'
-            '<th style="width:110px">구분</th>'
-            '<th>리콜 캠페인 수</th>'
-            '</tr></thead><tbody>'
-        )
-        for item in yearly:
-            yr  = item["year"]
-            cnt = item["count"]
-            label = f"{yr}년{'*' if yr == cur_year else ''}"
-            cls   = ' class="total-row"' if yr == cur_year else ""
-            html += (
-                f'<tr{cls}>'
-                f'<td style="text-align:center;font-weight:700">{label}</td>'
-                f'<td style="text-align:right">{cnt:,}건</td>'
-                f'</tr>'
-            )
-        html += '</tbody></table>'
-        html += f'<p class="recall-note">* {cur_year}년 집계중 (NHTSA 캠페인 번호 기준)</p>'
-        html += '</div>'
 
-    # ── 2. 월별 현황 가로 막대 차트 ─────────────────────────────────
+    # ── 2. 월별 실선 차트 ──────────────────────────────────────────
     has_monthly_data = monthly and any(m["count"] > 0 for m in monthly)
     if has_monthly_data:
-        max_mo = max((m["count"] for m in monthly), default=1) or 1
-        html += '<div class="mfr-chart month-chart">'
         html += (
-            f'<div class="mfr-chart-title" style="color:{color}">'
+            f'<div class="recall-chart-block gradient-bg">'
+            f'<div class="recall-chart-title" style="color:{color}">'
             f'📅 {cur_year}년 월별 NHTSA 리콜 현황</div>'
-        )
-        for item in monthly:
-            mo  = item["month"]
-            cnt = item["count"]
-            pct    = max(3, int(cnt / max_mo * 100)) if cnt > 0 else 3
-            in_bar = pct >= 25
-            html += (
-                f'<div class="mfr-bar-row">'
-                f'<span class="mfr-bar-label month-label">{mo:02d}월</span>'
-                f'<div class="mfr-bar-wrap">'
-                f'<div class="mfr-bar-fill" style="width:{pct}%">'
-            )
-            if in_bar:
-                html += f'<span class="mfr-bar-count">{cnt:,}건</span>'
-            html += '</div>'
-            if not in_bar:
-                html += f'<span class="mfr-bar-count-out">{cnt:,}건</span>'
-            html += '</div></div>'
-        html += (
+            f'<div class="chart-canvas-wrap"><canvas id="nhtsaMonthlyChart"></canvas></div>'
             f'<a href="https://www.nhtsa.gov/vehicle-safety/recalls" class="recall-detail-link" '
-            f'target="_blank" rel="noopener noreferrer">→ NHTSA 리콜 현황 확인하기</a>'
+            f'target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px">'
+            f'→ NHTSA 리콜 현황 확인하기</a>'
+            f'</div>'
         )
-        html += '</div>'
 
-    # ── 3. 제조사별 Top 12 가로 막대 차트 ───────────────────────────
+    # ── 3. 제조사별 파이 차트 ──────────────────────────────────────
     if mfr:
-        max_mfr = max((r["recalls"] for r in mfr), default=1) or 1
-        html += '<div class="mfr-chart">'
         html += (
-            f'<div class="mfr-chart-title" style="color:{color}">'
+            f'<div class="recall-chart-block">'
+            f'<div class="recall-chart-title" style="color:{color}">'
             f'🏭 {cur_year}년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
+            f'<div class="chart-canvas-wrap tall"><canvas id="nhtsaMfrChart"></canvas></div>'
+            f'<p class="recall-note">출처: NHTSA · '
+            f'<a href="https://data.transportation.gov/Automobiles/NHTSA-Recalls-by-Manufacturer/mu99-t4jn" '
+            f'target="_blank" rel="noopener noreferrer" style="color:inherit">data.transportation.gov</a></p>'
+            f'</div>'
         )
-        for item in mfr:
-            pct    = max(3, int(item["recalls"] / max_mfr * 100))
-            name   = _escape(str(item["manufacturer"]))
-            cnt    = item["recalls"]
-            in_bar = pct >= 25
-            html += (
-                f'<div class="mfr-bar-row">'
-                f'<span class="mfr-bar-label">{name}</span>'
-                f'<div class="mfr-bar-wrap">'
-                f'<div class="mfr-bar-fill" style="width:{pct}%">'
-            )
-            if in_bar:
-                html += f'<span class="mfr-bar-count">{cnt:,}</span>'
-            html += '</div>'
-            if not in_bar:
-                html += f'<span class="mfr-bar-count-out">{cnt:,}</span>'
-            html += '</div></div>'
-        html += (
-            '<p class="recall-note">출처: NHTSA · '
-            '<a href="https://data.transportation.gov/Automobiles/NHTSA-Recalls-by-Manufacturer/mu99-t4jn" '
-            'target="_blank" rel="noopener noreferrer" style="color:inherit">data.transportation.gov</a></p>'
-        )
-        html += '</div>'
 
     return html
 
@@ -790,6 +864,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str,
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>자동차 산업동향 브리핑 | HL Mando CQO</title>
 <style>{_CSS}</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -859,5 +934,6 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str,
 <button id="scrollTop" onclick="window.scrollTo({{top:0,behavior:'smooth'}})" title="맨 위로">↑</button>
 
 <script>{js}</script>
+<script>{_CHART_JS}</script>
 </body>
 </html>"""
