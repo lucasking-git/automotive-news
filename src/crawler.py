@@ -449,110 +449,96 @@ def fetch_nhtsa_data(max_days: int = 90) -> tuple[list[dict], list[dict]]:
     return sorted_articles, mfr_stats
 
 
-def fetch_nhtsa_recall_stats() -> dict:
-    """NHTSA 연도별/월별/제조사별 리콜 현황 수집 (루트 API).
+_TRANSPORTATION_GOV_URL = "https://data.transportation.gov/resource/6axg-epim.json"
 
-    루트 API를 페이지 순회하여 현재연도 + 전년도 캠페인을 집계한다.
+
+def fetch_nhtsa_recall_stats() -> dict:
+    """data.transportation.gov Socrata API로 NHTSA 연도별/월별/제조사 리콜 현황 수집.
+
+    Vehicle·Equipment·Tire·Child Seat 전 타입 포함 — 공식 대시보드와 동일 집계.
     Returns:
         {
           "yearly":  [{"year": 2025, "count": N}, {"year": 2026, "count": N}],
           "monthly": [{"month": 1, "count": N}, ...],   # 현재연도 월별
           "mfr":     [{"manufacturer": "...", "recalls": N}, ...]  # Top 12
         }
-    API 실패 시 빈 구조 반환 → collect_all_news에서 차종별 통계로 보완.
     """
-    from collections import defaultdict
-
     kst = timezone(timedelta(hours=9))
     now = datetime.now(kst)
-    cur_year = now.year
+    cur_year  = now.year
     prev_year = cur_year - 1
     cur_month = now.month
-
-    cur_prefix  = f"{cur_year  % 100:02d}V"
-    prev_prefix = f"{prev_year % 100:02d}V"
-
-    seen_cur:  set[str] = set()
-    seen_prev: set[str] = set()
-    monthly_counts: dict[int, int] = defaultdict(int)
-    mfr_counts:     dict[str, int] = defaultdict(int)
 
     s = requests.Session()
     s.verify = False
     s.headers.update(HEADERS)
 
-    offset = 0
-    page_size = 1000
-    max_pages = 12
+    stats: dict = {"yearly": [], "monthly": [], "mfr": []}
+    print(f"  [NHTSA 현황] data.transportation.gov {cur_year}/{prev_year}년 통계 수집 중...")
 
-    print(f"  [NHTSA 현황] {cur_year}/{prev_year}년 통계 수집 중...")
-    for _ in range(max_pages):
-        try:
-            resp = s.get(
-                "https://api.nhtsa.gov/recalls/",
-                params={"offset": offset, "max": page_size},
-                timeout=30,
+    try:
+        # ── 1. 연도별 현황 ─────────────────────────────────────────────
+        for yr in [prev_year, cur_year]:
+            r = s.get(
+                _TRANSPORTATION_GOV_URL,
+                params={
+                    "$select": "count(*) AS cnt",
+                    "$where": (
+                        f"report_received_date >= '{yr}-01-01T00:00:00.000' "
+                        f"AND report_received_date < '{yr + 1}-01-01T00:00:00.000'"
+                    ),
+                    "$limit": 1,
+                },
+                timeout=20,
             )
-            if resp.status_code != 200:
-                print(f"  [NHTSA 현황] 루트 API {resp.status_code}")
-                break
-            results = resp.json().get("results", [])
-            if not results:
-                break
+            cnt = int(r.json()[0].get("cnt", 0)) if r.status_code == 200 and r.json() else 0
+            stats["yearly"].append({"year": yr, "count": cnt})
 
-            too_old = False
-            for rec in results:
-                camp = rec.get("campaignId", "")
-                mfr  = rec.get("manufacturerName", "")
+        # ── 2. 월별 현황 (현재연도) ────────────────────────────────────
+        r = s.get(
+            _TRANSPORTATION_GOV_URL,
+            params={
+                "$select": "date_extract_m(report_received_date) AS month, count(*) AS cnt",
+                "$where": f"report_received_date >= '{cur_year}-01-01T00:00:00.000'",
+                "$group":  "month",
+                "$order":  "month ASC",
+                "$limit":  12,
+            },
+            timeout=20,
+        )
+        if r.status_code == 200:
+            monthly_map = {int(row["month"]): int(row["cnt"]) for row in r.json() if "month" in row}
+            stats["monthly"] = [
+                {"month": m, "count": monthly_map.get(m, 0)}
+                for m in range(1, cur_month + 1)
+            ]
 
-                m = re.match(r"(\d{2})V", camp)
-                if not m:
-                    continue
-                yy = int(m.group(1))
-                camp_year = 2000 + yy if yy <= 50 else 1900 + yy
+        # ── 3. 제조사별 현황 (현재연도 Top 12) ───────────────────────
+        r = s.get(
+            _TRANSPORTATION_GOV_URL,
+            params={
+                "$select": "manufacturer, count(*) AS cnt",
+                "$where":  f"report_received_date >= '{cur_year}-01-01T00:00:00.000'",
+                "$group":  "manufacturer",
+                "$order":  "cnt DESC",
+                "$limit":  12,
+            },
+            timeout=20,
+        )
+        if r.status_code == 200:
+            stats["mfr"] = [
+                {"manufacturer": row["manufacturer"], "recalls": int(row["cnt"])}
+                for row in r.json()
+            ]
 
-                if camp_year == cur_year:
-                    if camp not in seen_cur:
-                        seen_cur.add(camp)
-                        mfr_counts[mfr] += 1
-                        # ISO 8601 날짜 파싱 (예: "2026-05-11T18:11:52Z")
-                        raw_date = rec.get("recall573ReceivedDate", "") or rec.get("createDate", "")
-                        try:
-                            dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
-                            monthly_counts[dt.month] += 1
-                        except Exception:
-                            pass
-                elif camp_year == prev_year:
-                    if camp not in seen_prev:
-                        seen_prev.add(camp)
-                elif camp_year < prev_year:
-                    too_old = True
+        cur_cnt  = stats["yearly"][1]["count"] if len(stats["yearly"]) > 1 else 0
+        prev_cnt = stats["yearly"][0]["count"] if stats["yearly"] else 0
+        print(f"  [NHTSA 현황] {cur_year}년: {cur_cnt}건, {prev_year}년: {prev_cnt}건")
 
-            if too_old:
-                break
-            offset += len(results)
-        except Exception as ex:
-            print(f"  [NHTSA 현황] 수집 오류: {ex}")
-            break
+    except Exception as ex:
+        print(f"  [NHTSA 현황] 수집 오류: {ex}")
 
-    mfr_stats = sorted(
-        [{"manufacturer": k, "recalls": v} for k, v in mfr_counts.items()],
-        key=lambda x: x["recalls"],
-        reverse=True,
-    )[:12]
-
-    print(f"  [NHTSA 현황] {cur_year}년: {len(seen_cur)}건, {prev_year}년: {len(seen_prev)}건")
-    return {
-        "yearly": [
-            {"year": prev_year, "count": len(seen_prev)},
-            {"year": cur_year,  "count": len(seen_cur)},
-        ],
-        "monthly": [
-            {"month": m, "count": monthly_counts.get(m, 0)}
-            for m in range(1, cur_month + 1)
-        ],
-        "mfr": mfr_stats,
-    }
+    return stats
 
 
 _KATECH_LIST_URL = "https://www.katech.re.kr/page/07090450-89fd-4a3f-8373-ee74cbb3e738"
@@ -790,11 +776,11 @@ def collect_all_news() -> tuple[dict[str, list[dict]], dict]:
             result[cat].append(a)
     print(f"  [국토부] {len(molit)}건")
 
-    # 7. NHTSA 연도별/월별/제조사 현황 (루트 API → 실패 시 차종별 통계로 보완)
+    # 7. NHTSA 연도별/월별/제조사 현황 (data.transportation.gov → 실패 시 차종별 통계로 보완)
     nhtsa_recall_stats = fetch_nhtsa_recall_stats()
     if not nhtsa_recall_stats.get("mfr") and vehicle_mfr_stats:
         nhtsa_recall_stats["mfr"] = vehicle_mfr_stats
-        print(f"  [NHTSA 현황] 제조사 통계: 차종별 집계 {len(vehicle_mfr_stats)}개 사용")
+        print(f"  [NHTSA 현황] 제조사 통계: 차종별 집계(fallback) {len(vehicle_mfr_stats)}개 사용")
 
     # 8. KATECH 산업분석 레포트
     print("  [KATECH] 산업분석 레포트 수집 중...")
