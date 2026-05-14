@@ -16,13 +16,13 @@ def main():
     kst = timezone(timedelta(hours=9))
     today = datetime.now(kst).strftime("%Y년 %m월 %d일")
 
-    # 뉴스·리콜 수집 (NHTSA 기사 + 제조사 현황 단일 패스)
-    news, us_mfr_stats = collect_all_news()
+    # 뉴스·리콜 수집 (NHTSA 기사 + 연도별/월별/제조사 현황)
+    news, us_recall_stats = collect_all_news()
 
     print("\n국내 리콜 현황 수집 중...")
     kr_stats = fetch_cargokr_recall_stats()
 
-    html = build_html(news, today, recall_kr_stats=kr_stats, recall_us_mfr_stats=us_mfr_stats)
+    html = build_html(news, today, recall_kr_stats=kr_stats, recall_us_stats=us_recall_stats)
 
     docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
     os.makedirs(docs_dir, exist_ok=True)

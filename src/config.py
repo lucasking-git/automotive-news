@@ -8,6 +8,7 @@ CATEGORY_LABELS = {
     "recall_us":  "미국 리콜",
     "news":       "자동차 산업 동향 뉴스",
     "regulation": "법규·규제",
+    "katech":     "산업분석 (KATECH)",
 }
 
 CATEGORY_COLORS = {
@@ -15,6 +16,7 @@ CATEGORY_COLORS = {
     "recall_us":  "#0055A4",
     "news":       "#0099CC",
     "regulation": "#00A896",
+    "katech":     "#7C3AED",
 }
 
 CATEGORY_ICONS = {
@@ -22,6 +24,7 @@ CATEGORY_ICONS = {
     "recall_us":  "🇺🇸",
     "news":       "📰",
     "regulation": "⚖️",
+    "katech":     "🔬",
 }
 
 NAVER_QUERIES = {

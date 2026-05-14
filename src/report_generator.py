@@ -23,6 +23,7 @@ _FLAG_IMG = {
 _SEC_SOURCES = {
     "recall_kr": "자동차리콜센터 · car.go.kr",
     "recall_us": "NHTSA · nhtsa.gov",
+    "katech":    "한국자동차연구원 · katech.re.kr",
 }
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
@@ -212,13 +213,19 @@ footer strong{color:rgba(255,255,255,.75)}
 
 /* ── Manufacturer Bar Chart (미국 제조사별 현황) ── */
 .mfr-chart{padding:14px 20px 16px;border-bottom:1px solid #edf2f9;background:#fcfdff}
+.mfr-chart.month-chart{background:linear-gradient(135deg,#f0f8fd 0%,#e8f0fb 100%);border-bottom:1px solid #bee3f8}
 .mfr-chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
 .mfr-bar-row{display:flex;align-items:center;margin-bottom:6px;gap:10px;position:relative}
 .mfr-bar-label{width:150px;font-size:11.5px;font-weight:600;text-align:right;flex-shrink:0;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mfr-bar-label.month-label{width:52px;font-size:11.5px}
 .mfr-bar-wrap{flex:1;background:#e8f0fb;border-radius:4px;height:22px;position:relative;overflow:visible}
 .mfr-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#0055A4 0%,#00ADE9 100%);position:relative;min-width:4px}
 .mfr-bar-count{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
 .mfr-bar-count-out{position:absolute;left:calc(100% + 5px);top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:#0055A4;white-space:nowrap}
+
+/* KATECH 섹션 색상 */
+.section[style*="--sec-c:#7C3AED"] .mfr-bar-fill{background:linear-gradient(90deg,#6D28D9 0%,#A78BFA 100%)}
+.section[style*="--sec-c:#7C3AED"] .mfr-bar-count-out{color:#7C3AED}
 
 @media(max-width:480px){
   .gate-card{padding:36px 24px}
@@ -507,48 +514,127 @@ def _kr_recall_stats_html(stats: dict, color: str) -> str:
     return html
 
 
-def _us_mfr_stats_html(mfr_stats: list, color: str) -> str:
-    """미국 NHTSA 제조사별 리콜 현황 가로 막대 차트 HTML 블록."""
-    if not mfr_stats:
+def _us_recall_stats_html(us_stats: dict, color: str) -> str:
+    """미국 NHTSA 리콜 현황 HTML 블록 (연도별 + 월별 + 제조사별).
+
+    us_stats = {
+      "yearly":  [{"year": 2025, "count": N}, {"year": 2026, "count": N}],
+      "monthly": [{"month": 1,   "count": N}, ...],
+      "mfr":     [{"manufacturer": "...", "recalls": N}, ...]
+    }
+    """
+    yearly  = us_stats.get("yearly",  [])
+    monthly = us_stats.get("monthly", [])
+    mfr     = us_stats.get("mfr",     [])
+
+    if not yearly and not monthly and not mfr:
         return ""
-    max_cnt = max((r["recalls"] for r in mfr_stats), default=1) or 1
-    cur_year = datetime.now(timezone(timedelta(hours=9))).year
-    html = '<div class="mfr-chart">'
-    html += (
-        f'<div class="mfr-chart-title" style="color:{color}">'
-        f'🏭 {cur_year}년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
-    )
-    for item in mfr_stats:
-        pct     = max(3, int(item["recalls"] / max_cnt * 100))
-        name    = _escape(str(item["manufacturer"]))
-        cnt     = item["recalls"]
-        in_bar  = pct >= 25
+
+    kst_now  = datetime.now(timezone(timedelta(hours=9)))
+    cur_year = kst_now.year
+    html     = ""
+
+    # ── 1. 연도별 현황 테이블 ────────────────────────────────────────
+    if yearly:
+        html += '<div class="recall-overview">'
         html += (
-            f'<div class="mfr-bar-row">'
-            f'<span class="mfr-bar-label">{name}</span>'
-            f'<div class="mfr-bar-wrap">'
-            f'<div class="mfr-bar-fill" style="width:{pct}%">'
+            f'<div class="recall-overview-title" style="color:{color}">'
+            f'📊 연도별 NHTSA 리콜 현황 ({cur_year - 1}년 vs {cur_year}년 YTD)</div>'
         )
-        if in_bar:
-            html += f'<span class="mfr-bar-count">{cnt:,}</span>'
+        html += (
+            '<table class="recall-stats-table">'
+            '<thead><tr>'
+            '<th style="width:110px">구분</th>'
+            '<th>리콜 캠페인 수</th>'
+            '</tr></thead><tbody>'
+        )
+        for item in yearly:
+            yr  = item["year"]
+            cnt = item["count"]
+            label = f"{yr}년{'*' if yr == cur_year else ''}"
+            cls   = ' class="total-row"' if yr == cur_year else ""
+            html += (
+                f'<tr{cls}>'
+                f'<td style="text-align:center;font-weight:700">{label}</td>'
+                f'<td style="text-align:right">{cnt:,}건</td>'
+                f'</tr>'
+            )
+        html += '</tbody></table>'
+        html += f'<p class="recall-note">* {cur_year}년 집계중 (NHTSA 캠페인 번호 기준)</p>'
         html += '</div>'
-        if not in_bar:
-            html += f'<span class="mfr-bar-count-out">{cnt:,}</span>'
-        html += '</div></div>'
-    html += (
-        '<p class="recall-note">출처: NHTSA · '
-        '<a href="https://data.transportation.gov/Automobiles/NHTSA-Recalls-by-Manufacturer/mu99-t4jn" '
-        'target="_blank" rel="noopener noreferrer" style="color:inherit">data.transportation.gov</a></p>'
-    )
-    html += '</div>'
+
+    # ── 2. 월별 현황 가로 막대 차트 ─────────────────────────────────
+    has_monthly_data = monthly and any(m["count"] > 0 for m in monthly)
+    if has_monthly_data:
+        max_mo = max((m["count"] for m in monthly), default=1) or 1
+        html += '<div class="mfr-chart month-chart">'
+        html += (
+            f'<div class="mfr-chart-title" style="color:{color}">'
+            f'📅 {cur_year}년 월별 NHTSA 리콜 현황</div>'
+        )
+        for item in monthly:
+            mo  = item["month"]
+            cnt = item["count"]
+            pct    = max(3, int(cnt / max_mo * 100)) if cnt > 0 else 3
+            in_bar = pct >= 25
+            html += (
+                f'<div class="mfr-bar-row">'
+                f'<span class="mfr-bar-label month-label">{mo:02d}월</span>'
+                f'<div class="mfr-bar-wrap">'
+                f'<div class="mfr-bar-fill" style="width:{pct}%">'
+            )
+            if in_bar:
+                html += f'<span class="mfr-bar-count">{cnt:,}건</span>'
+            html += '</div>'
+            if not in_bar:
+                html += f'<span class="mfr-bar-count-out">{cnt:,}건</span>'
+            html += '</div></div>'
+        html += (
+            f'<a href="https://www.nhtsa.gov/vehicle-safety/recalls" class="recall-detail-link" '
+            f'target="_blank" rel="noopener noreferrer">→ NHTSA 리콜 현황 확인하기</a>'
+        )
+        html += '</div>'
+
+    # ── 3. 제조사별 Top 12 가로 막대 차트 ───────────────────────────
+    if mfr:
+        max_mfr = max((r["recalls"] for r in mfr), default=1) or 1
+        html += '<div class="mfr-chart">'
+        html += (
+            f'<div class="mfr-chart-title" style="color:{color}">'
+            f'🏭 {cur_year}년 NHTSA 제조사별 리콜 현황 (Top 12)</div>'
+        )
+        for item in mfr:
+            pct    = max(3, int(item["recalls"] / max_mfr * 100))
+            name   = _escape(str(item["manufacturer"]))
+            cnt    = item["recalls"]
+            in_bar = pct >= 25
+            html += (
+                f'<div class="mfr-bar-row">'
+                f'<span class="mfr-bar-label">{name}</span>'
+                f'<div class="mfr-bar-wrap">'
+                f'<div class="mfr-bar-fill" style="width:{pct}%">'
+            )
+            if in_bar:
+                html += f'<span class="mfr-bar-count">{cnt:,}</span>'
+            html += '</div>'
+            if not in_bar:
+                html += f'<span class="mfr-bar-count-out">{cnt:,}</span>'
+            html += '</div></div>'
+        html += (
+            '<p class="recall-note">출처: NHTSA · '
+            '<a href="https://data.transportation.gov/Automobiles/NHTSA-Recalls-by-Manufacturer/mu99-t4jn" '
+            'target="_blank" rel="noopener noreferrer" style="color:inherit">data.transportation.gov</a></p>'
+        )
+        html += '</div>'
+
     return html
 
 
 def _section_html(cat: str, label: str, color: str, icon_html: str, articles: list[dict],
-                  kr_stats: dict | None = None, us_mfr_stats: list | None = None) -> str:
+                  kr_stats: dict | None = None, us_recall_stats: dict | None = None) -> str:
     count = len(articles)
-    # recall_kr/recall_us는 카드별 출처 숨김 (섹션 헤더에 1회 표시)
-    show_source = cat not in ("recall_kr", "recall_us")
+    # recall_kr/recall_us/katech는 카드별 출처 숨김 (섹션 헤더에 1회 표시)
+    show_source = cat not in ("recall_kr", "recall_us", "katech")
     # 전체 날짜 구분선 없이 플랫 리스트로 통일
     group_by_date = False
 
@@ -615,8 +701,8 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
     overview_html = ""
     if cat == "recall_kr" and kr_stats:
         overview_html = _kr_recall_stats_html(kr_stats, color)
-    elif cat == "recall_us" and us_mfr_stats:
-        overview_html = _us_mfr_stats_html(us_mfr_stats, color)
+    elif cat == "recall_us" and us_recall_stats:
+        overview_html = _us_recall_stats_html(us_recall_stats, color)
 
     if not articles:
         body = (
@@ -656,7 +742,7 @@ def _section_html(cat: str, label: str, color: str, icon_html: str, articles: li
 
 def build_html(news_by_category: dict[str, list[dict]], report_date: str,
                recall_kr_stats: dict | None = None,
-               recall_us_mfr_stats: list | None = None) -> str:
+               recall_us_stats: dict | None = None) -> str:
     pw_hash = hashlib.sha256(SITE_PASSWORD.encode()).hexdigest()
 
     kst = timezone(timedelta(hours=9))
@@ -691,7 +777,7 @@ def build_html(news_by_category: dict[str, list[dict]], report_date: str,
         sections += _section_html(
             cat, label, color, icon_html, articles,
             kr_stats=(recall_kr_stats if cat == "recall_kr" else None),
-            us_mfr_stats=(recall_us_mfr_stats if cat == "recall_us" else None),
+            us_recall_stats=(recall_us_stats if cat == "recall_us" else None),
         )
 
     total = sum(len(v) for v in news_by_category.values())
